@@ -1,0 +1,5 @@
+*.txt
+*.out
+*.gch
+*.log
+*build

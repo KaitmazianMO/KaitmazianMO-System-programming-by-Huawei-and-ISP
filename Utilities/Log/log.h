@@ -28,6 +28,50 @@ struct Logger
     bool        dumping;  // mode for writing multy-line messages almost without formating
 };
 
+#ifndef $LOG_OFF
+    #define LOG_MSG_LOC( type, ... ) \
+    logger_message_localized (type, __FILE__, __func__, __LINE__, __VA_ARGS__)
+
+    #define LOG_INSTANCE() (logger_get_instance())
+
+    #define LOG_SET_FILE_NAME( name ) logger_set_log_file_path (name)
+
+    #define LOG_MSG( type, ... )  logger_message (type, __VA_ARGS__)
+
+    #define LOG_INC()  logger_indent_inc()
+
+    #define LOG_DEC()  logger_indent_dec()
+
+    #define START_DUMPING( title )  logger_start_dumping (title)
+
+    #define LOG_RAW_STR( ... )  logger_raw_str (__VA_ARGS__)
+
+    #define FINISH_DUMPING()  logger_finish_dumping()
+
+    #define LOG_PRINT_INDENT()  logger_print_indent()
+#else
+    #define LOG_MSG_LOC( type, ... ) ;
+
+    #define LOG_INSTANCE() ;
+
+    #define LOG_SET_FILE_NAME( name )  ;
+
+    #define LOG_MSG( type, ... )  ;
+
+    #define LOG_INC()  ;
+
+    #define LOG_DEC()  ;
+
+    #define START_DUMPING( title )  ;
+
+    #define LOG_RAW_STR( ... )  ;
+
+    #define FINISH_DUMPING() ;
+
+    #define LOG_PRINT_INDENT()  ;
+#endif
+    
+
 LOG_WIHTOUT_TRACE
 Logger *logger_get_instance();
 
@@ -38,10 +82,8 @@ LOG_WIHTOUT_TRACE
 void logger_message (MSG_TYPE type, const char *format_line, ...);
 
 LOG_WIHTOUT_TRACE
-void logger_message_dateiled (MSG_TYPE type, const char *file, 
+void logger_message_localized (MSG_TYPE type, const char *file, 
     const char *func, size_t line, const char *format_line, ...);
-#define LOG_MSG( type, ... ) \
-logger_message_dateiled (type, __FILE__, __func__, __LINE__, __VA_ARGS__);
 
 LOG_WIHTOUT_TRACE
 void logger_indent_dec();
@@ -54,9 +96,6 @@ void logger_start_dumping (const char *title);
 
 LOG_WIHTOUT_TRACE
 void logger_raw_str (const char *format_line, ...);
-
-LOG_WIHTOUT_TRACE
-void logger_raw_str_with_indent (const char *format_line, ...);
 
 LOG_WIHTOUT_TRACE
 void logger_finish_dumping();

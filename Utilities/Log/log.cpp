@@ -44,7 +44,7 @@ void logger_message (MSG_TYPE type, const char *format_line, ...)
     }
 }
 
-void logger_message_dateiled (MSG_TYPE type, const char *file_s, 
+void logger_message_localized (MSG_TYPE type, const char *file_s, 
     const char *func_s, size_t line, const char *format_line, ...)
 {
     if (logger_get_instance()->dumping) return;    
@@ -112,7 +112,10 @@ void logger_indent_dec()
 
 void logger_indent_inc()
 {
-    --logger_get_instance()->indent;
+    if (logger_get_instance()->indent > 0)
+        --logger_get_instance()->indent;
+    else
+        logger_get_instance()->indent = 0;
 }
 
 const char *str_type (MSG_TYPE type) 

@@ -3,7 +3,7 @@
 
 #include "Memory.h"
 
-const uint8_t g_pbuff_poison_byte = *((const char *)(&"Poison"));
+const uint8_t g_pbuff_poison_byte = (uint8_t)(((off_t)("Poison")) >> (sizeof (off_t)*4));
 
 enum ProtectedBufferState 
 {

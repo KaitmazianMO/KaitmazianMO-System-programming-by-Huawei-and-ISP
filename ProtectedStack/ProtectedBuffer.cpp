@@ -1,8 +1,14 @@
 #include "ProtectedBuffer.h"
 #include "Canary.h"
-#include "log.h"
+#include "../Utilities/Log/log.h"
 #include <assert.h>
 #include <memory.h>
+
+#ifndef $PROTECTION_OFF
+#define ON_PROTECTION_MODE( ... ) __VA_ARGS__
+#else 
+#define ON_PROTECTION_MODE
+#endif
 
 canary_t *get_front_canary (const ProtectedBuffer *this_);
 canary_t *get_back_canary (const ProtectedBuffer *this_);
@@ -88,10 +94,10 @@ bool protected_buff_verify (const ProtectedBuffer *this_)
 
     auto state = protected_buffer_state (this_);
     {
-        if (state == PBUFF_BAD_MEMORY)            LOG_MSG (ERROR, "Mem verifying failed");
-        if (state == PBUFF_BAD_ELEM_SIZE)         LOG_MSG (ERROR, "Elem size is zero"); 
-        if (state == PBUFF_BAD_DATA_FRONT_CANARY) LOG_MSG (ERROR, "Bad front canary %llx(%p)", *get_front_canary (this_), get_front_canary (this_));
-        if (state == PBUFF_BAD_DATA_BACK_CANARY)  LOG_MSG (ERROR, "Bad back canary %llx(%p)", *get_back_canary (this_), get_back_canary (this_));   
+        if (state == PBUFF_BAD_MEMORY)            LOG_MSG_LOC (ERROR, "Mem verifying failed");
+        if (state == PBUFF_BAD_ELEM_SIZE)         LOG_MSG_LOC (ERROR, "Elem size is zero"); 
+        if (state == PBUFF_BAD_DATA_FRONT_CANARY) LOG_MSG_LOC (ERROR, "Bad front canary %llx(%p)", *get_front_canary (this_), get_front_canary (this_));
+        if (state == PBUFF_BAD_DATA_BACK_CANARY)  LOG_MSG_LOC (ERROR, "Bad back canary %llx(%p)", *get_back_canary (this_), get_back_canary (this_));   
     }
 
     return state == PBUFF_OK;

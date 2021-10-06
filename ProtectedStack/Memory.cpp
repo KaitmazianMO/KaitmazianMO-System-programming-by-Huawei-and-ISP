@@ -1,5 +1,5 @@
 #include "Memory.h"
-#include "log.h"
+#include "../Utilities/Log/log.h"
 #include <assert.h>
 #include <string.h>
 
@@ -21,7 +21,7 @@ int mem_allocate   (Memory *this_, size_t n_elems, size_t el_size)
 
     this_->capacity = n_elems * el_size;
 
-    LOG_MSG (LOG, "Allocated %zu bytes at %p", this_->capacity,  this_->data);
+    LOG_MSG_LOC (LOG, "Allocated %zu bytes at %p", this_->capacity,  this_->data);
     return MEM_SUCCESS;
 }
 

@@ -151,15 +151,15 @@ bool stack_verify (const Stack *this_)
 
     int state = stack_state (this_);
     if (state == STK_BAD_FRONT_CANARY)
-        LOG_MSG (ERROR, "Bad front canary %llx(%p)", this_->front_canary, &this_->front_canary);
+        LOG_MSG_LOC (ERROR, "Bad front canary %llx(%p)", this_->front_canary, &this_->front_canary);
     if (state == STK_BAD_BACK_CANARY)  
-        LOG_MSG (ERROR, "Bad back canary %llx(%p)", this_->back_canary, &this_->back_canary);
+        LOG_MSG_LOC (ERROR, "Bad back canary %llx(%p)", this_->back_canary, &this_->back_canary);
     if (state == STK_BAD_DATA_BACK_CANARY || state == STK_BAD_DATA_FRONT_CANARY)   
-        LOG_MSG (ERROR, "Buffer verifying failed");
+        LOG_MSG_LOC (ERROR, "Buffer verifying failed");
     if (state == STK_HASH_MISMATCH) 
-        LOG_MSG (ERROR, "Stack hash was suddenly changed from outside,");
+        LOG_MSG_LOC (ERROR, "Stack hash was suddenly changed from outside,");
     if (state == STK_DATA_HASH_MISMATCH)
-         LOG_MSG (ERROR, "Stack data hash was suddenly changed from outside");    
+        LOG_MSG_LOC (ERROR, "Stack data hash was suddenly changed from outside");    
 
     return state == STACK_OK;
 }

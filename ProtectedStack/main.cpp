@@ -1,5 +1,7 @@
 #include "Stack.h"
-#include "gcc_trace.h"
+#include "../Utilities/Log/gcc_trace.h"
+#include "../Utilities/Log/log.h"
+
 #include <stdio.h>
 #include <assert.h>
 
@@ -9,7 +11,7 @@ int main()
 {
     int data = 5;
     auto *stk_int = stack_ctor (10, sizeof (int));
-    if (!stk_int) LOG_MSG (FATAL, "Stack was not created");
+    if (!stk_int) LOG_MSG_LOC (FATAL, "Stack was not created");
 
     stack_dump_to_log (stk_int);
 

@@ -2,7 +2,7 @@
 #define STACK_H_IONCLUDED
 
 #include <stdlib.h>
-#include "gcc_trace.h"
+#include "../Utilities/Log/gcc_trace.h"
 #include "ProtectedBuffer.h"
 
 enum StackState

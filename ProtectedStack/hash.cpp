@@ -1,5 +1,5 @@
 #include "hash.h"
-#include "log.h"
+#include "../Utilities/Log/log.h"
 
 LOG_WIHTOUT_TRACE
 static char roll (char);
@@ -11,7 +11,7 @@ hash_t compute_hash (const char *mem, size_t mem_size, size_t mod)
     for (size_t i = 0; i < mem_size; ++i)
         phash[i%sizeof(hash_t)] ^= roll (mem[i]);
 
-    logger_message (LOG, "Computed hash: %zu", hash % mod);
+    LOG_MSG_LOC (LOG, "Computed hash: %zu", hash % mod);
     return hash % mod;
 }
 

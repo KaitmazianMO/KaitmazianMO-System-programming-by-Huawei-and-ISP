@@ -3,14 +3,16 @@
 
 #include "Memory.h"
 
+
 const uint8_t g_pbuff_poison_byte = (uint8_t)(((off_t)("Poison")) >> (sizeof (off_t)*4));
 
 enum ProtectedBufferState 
 {
-    PBUFF_OK,
-    PBUFF_BAD_DATA_FRONT_CANARY = 1024, PBUFF_BAD_DATA_BACK_CANARY,
-    PBUFF_BAD_MEMORY,
-    PBUFF_BAD_ELEM_SIZE,
+    PBUFF_OK                    = 0x00,
+    PBUFF_BAD_DATA_FRONT_CANARY = 0x01, 
+    PBUFF_BAD_DATA_BACK_CANARY  = 0x04,
+    PBUFF_BAD_MEMORY            = 0x08,
+    PBUFF_BAD_ELEM_SIZE         = 0x0A,
 };
 
 struct ProtectedBuffer

@@ -7,14 +7,22 @@
 
 const size_t GROW_COEFF = 2;
 
+#ifdef CANARY_PROTECTION
+    #define SET_CANARIES
+        
+    #define VERIFY_CANAIES
+#endif
+
+
+
 struct Stack
 {
     canary_t front_canary;
-    ProtectedBuffer buff;
-    size_t          curr_pos;
-    hash_t          data_hash;
-    hash_t          stack_hash;
-    elem_printer_t  print_elem;
+    ProtectedBuffer     buff;
+    size_t              curr_pos;
+    hash_t              data_hash;
+    hash_t              stack_hash;
+    stk_elem_printer_t  print_elem;
     canary_t back_canary;
 };
 
@@ -136,7 +144,7 @@ void stack_dump_to_log (const Stack *this_)
     logger_finish_dumping();
 }
 
-void stack_set_elem_printer (Stack *this_, elem_printer_t printer)
+void stack_set_elem_printer (Stack *this_, stk_elem_printer_t printer)
 {   
     assert (stack_verify (this_));
     assert (printer);

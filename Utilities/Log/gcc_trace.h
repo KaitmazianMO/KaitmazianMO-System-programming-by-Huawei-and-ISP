@@ -2,6 +2,8 @@
 #define GCC_TRACE_INCLUDED
 
 #include "log.h"
+#include <dlfcn.h>
+#include <cxxabi.h>
 
 #define WITHOUT_TRACE  __attribute__((no_instrument_function))
 

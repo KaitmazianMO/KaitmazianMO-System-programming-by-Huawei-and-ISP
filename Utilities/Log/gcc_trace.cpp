@@ -1,8 +1,22 @@
 #include "gcc_trace.h"
 
 #include <stdio.h>
+#include <bfd.h>
 #include <dlfcn.h>
 #include <cxxabi.h>
+
+/*
+ *  @todo: learn BFD (Binary File Descriptor library). Helps to do more datailed logs
+ */
+
+WITHOUT_TRACE
+void damangle (const char *name, const char file);
+
+struct CallInfo
+{
+    const char *func_name;
+    const char *file_name;
+};
 
 void __cyg_profile_func_enter (void *callee, void *caller) 
 {
@@ -20,8 +34,7 @@ void __cyg_profile_func_enter (void *callee, void *caller)
         {
             name = info.dli_sname ? info.dli_sname : "[no dli_sname]";
         }
-        logger_message (CALL, "%s <%s>", name, info.dli_fname);
-        //(log, "%*s[CALL] %s <%s>\n", 4*stk_offset++, "",  name, info.dli_fname);
+        LOG_MSG (CALL, "%s <%s>", name, info.dli_fname);
         if (demangled) 
         {
             delete demangled;
@@ -49,7 +62,7 @@ void __cyg_profile_func_exit (void *callee, void *caller)
         {
             name = info.dli_sname ? info.dli_sname : "[no dli_sname]";
         }
-        logger_message (QUIT, "%s <%s>", name, info.dli_fname); //fprintf(log, "%*s[QUIT] %s <%s>\n", 4*--stk_offset, "", name, info.dli_fname);
+        LOG_MSG (QUIT, "%s <%s>", name, info.dli_fname); //fprintf(log, "%*s[QUIT] %s <%s>\n", 4*--stk_offset, "", name, info.dli_fname);
         if (demangled) 
         {
             delete demangled;

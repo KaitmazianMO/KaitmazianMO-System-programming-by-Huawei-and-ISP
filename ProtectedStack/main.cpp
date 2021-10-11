@@ -9,6 +9,11 @@ void print_int (FILE *file, const void *pint);
 
 int main()
 {
+    #ifdef $CANARIES_PROTECTION 
+        printf ("DEFINED:CANARIES_PROTECION\n");
+    #else
+        printf ("UNDEFINED:CANARIES_PROTECION\n");
+    #endif
     int data = 5;
     auto *stk_int = stack_ctor (10, sizeof (int));
     

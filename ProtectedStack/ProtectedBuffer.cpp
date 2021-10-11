@@ -45,6 +45,16 @@ STRUCT_VERIDICATION_CODE    \
     }   \
 )
 
+#define NULL_VERIFY( this_ )     \
+STRUCT_VERIDICATION_CODE    \
+(   \
+    {   \
+        int state = PBUFF_OK;   \
+        if ((state = protected_buff_state (this_)) != PBUFF_OK)     \
+            return NULL;   \
+    }   \
+)
+
 
 CANARIES_PROTECION_CODE (
     canary_t *get_front_canary (const ProtectedBuffer *this_);
@@ -57,7 +67,7 @@ MEMORY_CLEAN_UPS_CODE (
 
 int protected_buff_allocate   (ProtectedBuffer *this_, size_t n_elems, size_t el_sz)
 {
-    VERIFY (this_);
+    assert (this_);
 
     auto err = mem_allocate (&this_->mem, n_elems*el_sz + 2*CANARY, 1);
     if (err) return err;
@@ -99,7 +109,7 @@ int protected_buff_reallocate (ProtectedBuffer *this_ ,size_t n_elems)
 
 void *protected_buff_get_data (const ProtectedBuffer *this_, size_t el_pos)
 {
-    VERIFY (this_);
+    NULL_VERIFY (this_);
     return mem_get_data (&this_->mem, el_pos*this_->elem_sz + CANARY, 1);
 }
 
@@ -115,9 +125,9 @@ size_t protected_buff_size    (const ProtectedBuffer *this_)
     return (this_->mem.capacity - 2*CANARY)/this_->elem_sz;
 }
 
-ProtectedBufferState protected_buffer_state (const ProtectedBuffer *this_)
+ProtectedBufferState protected_buff_state (const ProtectedBuffer *this_)
 {
-    VERIFY (this_);
+    assert (this_);
     
     int state = PBUFF_OK;
     if (!mem_verify (&this_->mem)       ) state |= PBUFF_BAD_MEMORY;
@@ -137,7 +147,7 @@ bool protected_buff_verify (const ProtectedBuffer *this_)
 {
     assert (this_);
 
-    auto state = protected_buffer_state (this_);
+    auto state = protected_buff_state (this_);
     {
         if (state & PBUFF_BAD_MEMORY)            
             LOG_MSG_LOC (ERROR, "Mem verifying failed");

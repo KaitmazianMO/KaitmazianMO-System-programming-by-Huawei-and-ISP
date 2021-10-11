@@ -25,6 +25,12 @@ CANARIES_PROTECTION_CODE (  \
     #define HASH_PROTECTION_CODE( ... ) ;
 #endif
 
+#ifdef $MEMORY_CLEAN_UPS
+    #define MEMORY_CLEAN_UPS_CODE( ... ) __VA_ARGS__
+#else
+    #define MEMORY_CLEAN_UPS_CODE( ... ) ;
+#endif
+
 #define UPDATE_HASHES( this_ )   \
 HASH_PROTECTION_CODE (   \
     update_hashes (this_)   \
@@ -50,6 +56,12 @@ HASH_PROTECTION_CODE (
     bool check_stack_hash (const Stack *this_); 
     bool check_data_hash (const Stack *this_);
 )
+
+MEMORY_CLEAN_UPS_CODE (
+    void clean_elem (Stack *this_, size_t n);
+)
+
+#define CLEAN_ELEM( this_, n) MEMORY_CLEAN_UPS_CODE (clean_elem (this_, n); )
 
 Stack *stack_ctor (size_t size, size_t elem_sz)
 {
@@ -77,7 +89,7 @@ int stack_push (Stack *this_, const void *data)
 
     int err = 0;
     if (protected_buff_size (&this_->buff) == this_->curr_pos)
-        err = protected_buff_reallocate (&this_->buff, this_->curr_pos*GROW_COEFF + 1);
+        err = protected_buff_reallocate (&this_->buff, (this_->curr_pos + (this_->curr_pos ? 0 : 1)) * GROW_COEFF);
 
     if (!err)
     {
@@ -97,6 +109,8 @@ int stack_pop (Stack *this_, void *dest)
 
     auto ptop = protected_buff_get_data (&this_->buff, --this_->curr_pos);
     memmove (dest, ptop, this_->buff.elem_sz);
+    CLEAN_ELEM (this_, this_->curr_pos);
+
 
     UPDATE_HASHES (this_);    
     return STACK_OK;
@@ -263,5 +277,15 @@ HASH_PROTECTION_CODE (
         this_non_const->data_hash = old_hash;
 
         return old_hash == new_hash;
+    }
+)
+
+MEMORY_CLEAN_UPS_CODE (
+    void clean_elem (Stack *this_, size_t n)
+    {
+        assert (this_);
+        
+        auto pelem = protected_buff_get_data (&this_->buff, n);
+        memset (pelem, g_pbuff_poison_byte, this_->buff.elem_sz);
     }
 )

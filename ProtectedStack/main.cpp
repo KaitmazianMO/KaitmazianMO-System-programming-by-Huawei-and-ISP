@@ -7,13 +7,17 @@
 
 void print_int (FILE *file, const void *pint);
 
+/*
+
+
+@bug: canary verifying 
+
+
+*/
+
 int main()
 {
-    #ifdef $CANARIES_PROTECTION 
-        printf ("DEFINED:CANARIES_PROTECION\n");
-    #else
-        printf ("UNDEFINED:CANARIES_PROTECION\n");
-    #endif
+
     int data = 5;
     auto *stk_int = stack_ctor (10, sizeof (int));
     
@@ -29,7 +33,14 @@ int main()
         printf ("[%d] = %d\n", i, data);
     }
 
+    //*(*(char **)((char *)stk_int + sizeof (canary_t)) + 32) = 0x69;
+    //*((char *)stk_int + sizeof (ProtectedBuffer) + sizeof (canary_t) + 3) = 0x69;
+    //*((char *)stk_int + sizeof (ProtectedBuffer) + sizeof (canary_t) + 4) = 0x69;
+    //*((char *)stk_int + sizeof (ProtectedBuffer) + sizeof (canary_t) + 6) = 0x69;
+
     stack_set_elem_printer (stk_int, print_int);
+
+
 
     stack_dump_to_log (stk_int);
     stack_dtor (stk_int);    

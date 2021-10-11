@@ -164,6 +164,13 @@ bool protected_buff_verify (const ProtectedBuffer *this_)
     return state == PBUFF_OK;
 }
 
+protected_buff_error_handler_t protected_buff_set_error_handler (protected_buff_error_handler_t mew_handler)
+{
+    auto old_handler = err_handler;
+    err_handler = mew_handler;
+    return old_handler;
+}
+
 CANARIES_PROTECION_CODE 
 (
     canary_t *get_front_canary (const ProtectedBuffer *this_) 

@@ -20,7 +20,7 @@ struct ProtectedBuffer
     size_t elem_sz;
 };
 
-typedef void (*protected_buff_error_handler_t) (ProtectedBuffer *this_, int err);
+typedef void (*protected_buff_error_handler_t) (const ProtectedBuffer *this_, int err);
 
 int protected_buff_allocate   (ProtectedBuffer *this_, size_t n_elems, size_t el_sz);
 int protected_buff_deallocate (ProtectedBuffer *this_);

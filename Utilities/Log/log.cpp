@@ -7,7 +7,6 @@ static const char *log_file_name = ".log";
 
 Logger *logger_get_instance()
 {
-    printf ("CALLED LOGGER GET INSTANCE\n");
     static Logger instance = {
         .log_file_name = log_file_name,
         .file = fopen (log_file_name, "wb"),

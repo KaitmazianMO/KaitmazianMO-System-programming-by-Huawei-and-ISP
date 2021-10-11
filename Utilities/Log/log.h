@@ -28,7 +28,7 @@ struct Logger
     bool        dumping;  // mode for writing multy-line messages almost without formating
 };
 
-#ifndef $LOG_OFF
+#ifdef $DO_LOG_AND_TRACE
     #define LOG_MSG_LOC( type, ... ) \
     logger_message_localized (type, __FILE__, __func__, __LINE__, __VA_ARGS__)
 
@@ -50,9 +50,11 @@ struct Logger
 
     #define LOG_PRINT_INDENT()  logger_print_indent()
 #else
+    static Logger $__logger_instatnce__$ = Logger{"stderr", stderr, 0, 0};
+
     #define LOG_MSG_LOC( type, ... ) ;
 
-    #define LOG_INSTANCE() ;
+    #define LOG_INSTANCE() (&$__logger_instatnce__$)
 
     #define LOG_SET_FILE_NAME( name )  ;
 

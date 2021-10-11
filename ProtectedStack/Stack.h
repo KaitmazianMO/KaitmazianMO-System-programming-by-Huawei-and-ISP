@@ -5,14 +5,16 @@
 #include "../Utilities/Log/gcc_trace.h"
 #include "ProtectedBuffer.h"
 
+
 enum StackState
 {
-    STACK_OK,
-    STK_BAD_FRONT_CANARY,     STK_BAD_BACK_CANARY,
-    STK_BAD_DATA_FRONT_CANARY = PBUFF_BAD_DATA_FRONT_CANARY,
-    STK_BAD_DATA_BACK_CANARY = PBUFF_BAD_DATA_BACK_CANARY,
-    STK_HASH_MISMATCH, STK_DATA_HASH_MISMATCH,
-    STK_POPPING_EMPTY_STACK
+    STACK_OK                        = 0x00,
+    STK_BAD_FRONT_CANARY            = 0x01,     
+    STK_BAD_BACK_CANARY             = 0x02,
+    STK_HASH_MISMATCH               = 0x04, 
+    STK_DATA_HASH_MISMATCH          = 0x08,
+    STK_POPPING_EMPTY_STACK         = 0x10,
+    STK_BUFFER_VERIFICATION_FAILED  = 0x20
 };
 
 typedef void (*stk_elem_printer_t) (FILE *file, const void *elem);
@@ -27,6 +29,7 @@ int    stack_dtor (Stack *this_);
 bool   stack_verify (const Stack *this_);
 int    stack_state (const Stack *this_);
 void   stack_set_elem_printer (Stack *this_, stk_elem_printer_t printer);
+void   stack_dump (const Stack *this_, FILE *file, int indent);
 void   stack_dump_to_log (const Stack *this_);
 
 #endif

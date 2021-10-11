@@ -7,30 +7,49 @@
 
 const size_t GROW_COEFF = 2;
 
-#ifdef CANARY_PROTECTION
-    #define SET_CANARIES
-        
-    #define VERIFY_CANAIES
+#ifdef $CANARIES_PROTECTION
+    #define CANARIES_PROTECTION_CODE( ... ) __VA_ARGS__
+#else
+    #define CANARIES_PROTECTION_CODE( ... )  ;
 #endif
 
+#define SET_CANARIES( this_ )   \
+CANARIES_PROTECTION_CODE (  \
+    set_canary (&this_->front_canary);  \
+    set_canary (&this_->back_canary);  \
+)
 
+#ifdef $HASH_PROTECTION
+    #define HASH_PROTECTION_CODE( ... ) __VA_ARGS__
+#else
+    #define HASH_PROTECTION_CODE( ... ) ;
+#endif
+
+#define UPDATE_HASHES( this_ )   \
+HASH_PROTECTION_CODE (   \
+    update_hashes (this_)   \
+)
 
 struct Stack
 {
-    canary_t front_canary;
+CANARIES_PROTECTION_CODE (canary_t front_canary; )
     ProtectedBuffer     buff;
     size_t              curr_pos;
+    stk_elem_printer_t  print_elem;
+HASH_PROTECTION_CODE (    
     hash_t              data_hash;
     hash_t              stack_hash;
-    stk_elem_printer_t  print_elem;
-    canary_t back_canary;
+)
+CANARIES_PROTECTION_CODE (canary_t back_canary; )
 };
 
-hash_t compute_stack_hash (const Stack *this_);
-hash_t compute_buff_hash (const Stack *this_);
-void update_hashes (Stack *this_);
-bool check_stack_hash (const Stack *this_); 
-bool check_data_hash (const Stack *this_);
+HASH_PROTECTION_CODE (
+    hash_t compute_stack_hash (const Stack *this_);
+    hash_t compute_buff_hash (const Stack *this_);
+    void update_hashes (Stack *this_);
+    bool check_stack_hash (const Stack *this_); 
+    bool check_data_hash (const Stack *this_);
+)
 
 Stack *stack_ctor (size_t size, size_t elem_sz)
 {
@@ -43,11 +62,10 @@ Stack *stack_ctor (size_t size, size_t elem_sz)
             free (pstk);
             return NULL;
         }
-        set_canary (&pstk->front_canary);
-        set_canary (&pstk->back_canary);
         pstk->curr_pos = 0;    
         pstk->print_elem = NULL;
-        update_hashes (pstk);
+        SET_CANARIES (pstk);
+        UPDATE_HASHES (pstk);
     }
 
     return pstk;
@@ -66,7 +84,7 @@ int stack_push (Stack *this_, const void *data)
         int err = protected_buff_set_data (&this_->buff, this_->curr_pos, data);
         if (!err) this_->curr_pos++;
     }
-    update_hashes (this_);
+    UPDATE_HASHES (this_);
     return err;
 }
 
@@ -80,7 +98,7 @@ int stack_pop (Stack *this_, void *dest)
     auto ptop = protected_buff_get_data (&this_->buff, --this_->curr_pos);
     memmove (dest, ptop, this_->buff.elem_sz);
 
-    update_hashes (this_);    
+    UPDATE_HASHES (this_);    
     return STACK_OK;
 }
 
@@ -96,52 +114,59 @@ int stack_dtor (Stack *this_)
     return err;   
 }
 
-int stack_state (const Stack *this_)
-{
-    if (!is_valid_canary (&(this_->front_canary))) 
-        return STK_BAD_FRONT_CANARY;
-    if (!is_valid_canary (&this_->back_canary))  
-        return STK_BAD_BACK_CANARY;
-    if (!protected_buff_verify (&this_->buff))   
-        return protected_buffer_state (&this_->buff);
-    if (!check_stack_hash (this_)) 
-        return STK_HASH_MISMATCH;
-    if (!check_data_hash (this_))
-        return STK_DATA_HASH_MISMATCH;;    
+WITHOUT_TRACE
+static void print_indent (FILE *file, int indent) { fprintf (file, "%*.s", indent, ""); }
 
-    return STACK_OK;   
+void stack_dump (const Stack *this_, FILE *file, int indent)
+{
+    assert (stack_verify (this_));
+    if (file == NULL) file = stderr;
+
+    START_DUMPING ("Stack dump");
+
+    CANARIES_PROTECTION_CODE (
+        print_indent (file, indent); fprintf (file, "\tfront canary     = %lx\n", this_->front_canary);
+    )
+    print_indent (file, indent); fprintf (file,     "\tcurrent top      = %zu\n", this_->curr_pos);
+    print_indent (file, indent); fprintf (file,     "\tcurrent capacity = %zu\n", protected_buff_size (&this_->buff));
+    HASH_PROTECTION_CODE (
+        print_indent (file, indent); fprintf (file, "\tstack hash       = " HASH_FMT "\n", this_->stack_hash);
+        print_indent (file, indent); fprintf (file, "\tdata hash        = " HASH_FMT "\n", this_->data_hash);
+    )
+    CANARIES_PROTECTION_CODE (
+        print_indent (file, indent); fprintf (file, "\tback canary      = %lx\n", this_->back_canary);
+    )
+
+    const void *curr_elem_ptr = NULL;
+    print_indent (file, indent);
+    fprintf (file, "\t{\n");
+    const size_t buff_size = protected_buff_size (&this_->buff);
+    for (size_t i = 0; i < buff_size; ++i)
+    {
+        curr_elem_ptr = protected_buff_get_data (&this_->buff, i);
+        print_indent (file, indent);
+        fprintf (file, "\t\t[%zu] = ", i);
+        if (this_->print_elem) 
+            this_->print_elem (file, curr_elem_ptr);
+        else 
+            fprintf (file, "[not match operator to print an element]");
+        fprintf (file, "\n");
+    }
+    print_indent (file, indent);
+    fprintf (file, "\t}\n");
+
+    FINISH_DUMPING();
 }
 
 void stack_dump_to_log (const Stack *this_)
 {
     assert (stack_verify (this_));
 
-    logger_start_dumping ("Stack dump");
+    START_DUMPING ("Stack dump");
 
-    logger_print_indent(); logger_raw_str ("\tfront canary     = %llx\n", this_->front_canary);
-    logger_print_indent(); logger_raw_str ("\tcurrent top      = %zu\n", this_->curr_pos);
-    logger_print_indent(); logger_raw_str ("\tcurrent capacity = %zu\n", protected_buff_size (&this_->buff));
-    logger_print_indent(); logger_raw_str ("\tstack hash       = " HASH_FMT "\n", this_->stack_hash);
-    logger_print_indent(); logger_raw_str ("\tdata hash        = " HASH_FMT "\n", this_->data_hash);
-    logger_print_indent(); logger_raw_str ("\tcurrent top      = %zu\n", this_->curr_pos);
-    logger_print_indent(); logger_raw_str ("\tback canary      = %llx\n", this_->back_canary);
+    stack_dump (this_, LOG_INSTANCE()->file, 4*LOG_INSTANCE()->indent);
 
-    const void *curr_elem_ptr = NULL;
-    logger_print_indent();
-    logger_raw_str ("\t{\n");
-    for (size_t i = 0; i < protected_buff_size (&this_->buff); ++i)
-    {
-        curr_elem_ptr = protected_buff_get_data (&this_->buff, i);
-        logger_print_indent();
-        logger_raw_str ("\t\t[%d] = ", i);
-        if (this_->print_elem) this_->print_elem (logger_get_instance()->file, curr_elem_ptr);
-        else logger_raw_str ("[not match operator to print an element]");
-        logger_raw_str ("\n");
-    }
-    logger_print_indent();
-    logger_raw_str ("\t}\n");
-
-    logger_finish_dumping();
+    FINISH_DUMPING();
 }
 
 void stack_set_elem_printer (Stack *this_, stk_elem_printer_t printer)
@@ -150,7 +175,27 @@ void stack_set_elem_printer (Stack *this_, stk_elem_printer_t printer)
     assert (printer);
 
     this_->print_elem = printer;
-    update_hashes (this_);    
+    UPDATE_HASHES (this_);    
+}
+
+int stack_state (const Stack *this_)
+{
+    int state = STACK_OK;
+    CANARIES_PROTECTION_CODE (
+        if (!is_valid_canary (&(this_->front_canary))) 
+            state |= STK_BAD_FRONT_CANARY;
+        if (!is_valid_canary (&this_->back_canary))  
+            state |= STK_BAD_BACK_CANARY;
+    )
+    if (!protected_buff_verify (&this_->buff))   
+        state |= STK_BUFFER_VERIFICATION_FAILED;
+    HASH_PROTECTION_CODE (
+        if (!check_stack_hash (this_)) 
+            state |= STK_HASH_MISMATCH;
+        if (!check_data_hash (this_))
+            state |= STK_DATA_HASH_MISMATCH;;    
+    )
+    return state;   
 }
 
 bool stack_verify (const Stack *this_)
@@ -158,58 +203,65 @@ bool stack_verify (const Stack *this_)
     assert (this_);
 
     int state = stack_state (this_);
-    if (state == STK_BAD_FRONT_CANARY)
+    CANARIES_PROTECTION_CODE (
+    if (state & STK_BAD_FRONT_CANARY)
         LOG_MSG_LOC (ERROR, "Bad front canary %llx(%p)", this_->front_canary, &this_->front_canary);
-    if (state == STK_BAD_BACK_CANARY)  
+    if (state & STK_BAD_BACK_CANARY)  
         LOG_MSG_LOC (ERROR, "Bad back canary %llx(%p)", this_->back_canary, &this_->back_canary);
-    if (state == STK_BAD_DATA_BACK_CANARY || state == STK_BAD_DATA_FRONT_CANARY)   
+    )
+    
+    if (state & STK_BUFFER_VERIFICATION_FAILED)   
         LOG_MSG_LOC (ERROR, "Buffer verifying failed");
-    if (state == STK_HASH_MISMATCH) 
-        LOG_MSG_LOC (ERROR, "Stack hash was suddenly changed from outside,");
-    if (state == STK_DATA_HASH_MISMATCH)
-        LOG_MSG_LOC (ERROR, "Stack data hash was suddenly changed from outside");    
-
+    
+    HASH_PROTECTION_CODE (
+        if (state & STK_HASH_MISMATCH) 
+            LOG_MSG_LOC (ERROR, "Stack hash was suddenly changed from outside,");
+        if (state & STK_DATA_HASH_MISMATCH)
+            LOG_MSG_LOC (ERROR, "Stack data hash was suddenly changed from outside");    
+    )
     return state == STACK_OK;
 }
 
-void update_hashes (Stack *this_) 
-{   
-    this_->data_hash   = 0;
-    this_->stack_hash = 0;
+HASH_PROTECTION_CODE (
+    void update_hashes (Stack *this_) 
+    {   
+        this_->data_hash   = 0;
+        this_->stack_hash = 0;
 
-     this_->data_hash  = compute_buff_hash (this_);
-     this_->stack_hash = compute_stack_hash (this_); 
-}
+        this_->data_hash  = compute_buff_hash (this_);
+        this_->stack_hash = compute_stack_hash (this_); 
+    }
 
-hash_t compute_stack_hash (const Stack *this_) 
-{ 
-    return compute_hash ((const char *)this_, sizeof (*this_)); 
-}
+    hash_t compute_stack_hash (const Stack *this_) 
+    { 
+        return compute_hash ((const char *)this_, sizeof (*this_)); 
+    }
 
-hash_t compute_buff_hash (const Stack *this_)  
-{ 
-    return compute_hash ((const char *)protected_buff_get_data (&this_->buff, 0), 
-        protected_buff_size (&this_->buff)*this_->buff.elem_sz); 
-}
+    hash_t compute_buff_hash (const Stack *this_)  
+    { 
+        return compute_hash ((const char *)protected_buff_get_data (&this_->buff, 0), 
+            protected_buff_size (&this_->buff)*this_->buff.elem_sz); 
+    }
 
-bool check_stack_hash (const Stack *this_)
-{
-    Stack *this_non_const = (Stack *)this_;
-    hash_t old_hash = this_->stack_hash;
-    this_non_const->stack_hash = 0;
-    hash_t new_hash = compute_stack_hash (this_);
-    this_non_const->stack_hash = old_hash;
+    bool check_stack_hash (const Stack *this_)
+    {
+        Stack *this_non_const = (Stack *)this_;
+        hash_t old_hash = this_->stack_hash;
+        this_non_const->stack_hash = 0;
+        hash_t new_hash = compute_stack_hash (this_);
+        this_non_const->stack_hash = old_hash;
 
-    return old_hash == new_hash;
-}
+        return old_hash == new_hash;
+    }
 
-bool check_data_hash (const Stack *this_)
-{
-    Stack *this_non_const = (Stack *)this_;    
-    hash_t old_hash = this_non_const->data_hash;
-    this_non_const->data_hash = 0;
-    hash_t new_hash = compute_buff_hash (this_);
-    this_non_const->data_hash = old_hash;
+    bool check_data_hash (const Stack *this_)
+    {
+        Stack *this_non_const = (Stack *)this_;    
+        hash_t old_hash = this_non_const->data_hash;
+        this_non_const->data_hash = 0;
+        hash_t new_hash = compute_buff_hash (this_);
+        this_non_const->data_hash = old_hash;
 
-    return old_hash == new_hash;
-}
+        return old_hash == new_hash;
+    }
+)

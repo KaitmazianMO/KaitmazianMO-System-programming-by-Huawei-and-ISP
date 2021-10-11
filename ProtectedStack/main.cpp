@@ -11,6 +11,7 @@ int main()
 {
     int data = 5;
     auto *stk_int = stack_ctor (10, sizeof (int));
+    
     if (!stk_int) LOG_MSG_LOC (FATAL, "Stack was not created");
 
     stack_dump_to_log (stk_int);

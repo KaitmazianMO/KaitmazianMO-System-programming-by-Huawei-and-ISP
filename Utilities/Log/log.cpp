@@ -7,6 +7,7 @@ static const char *log_file_name = ".log";
 
 Logger *logger_get_instance()
 {
+    printf ("CALLED LOGGER GET INSTANCE\n");
     static Logger instance = {
         .log_file_name = log_file_name,
         .file = fopen (log_file_name, "wb"),
@@ -83,7 +84,6 @@ void logger_raw_str (const char *format_line, ...)
 
     Logger *instance = logger_get_instance();
     FILE *file = instance->file;
-    int indent = (int)instance->indent;
     
     if (format_line && instance)
     {

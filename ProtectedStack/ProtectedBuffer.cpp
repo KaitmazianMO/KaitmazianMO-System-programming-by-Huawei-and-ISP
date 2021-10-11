@@ -4,12 +4,15 @@
 #include <assert.h>
 #include <memory.h>
 
+static protected_buff_error_handler_t err_handler = NULL;
+
 #ifdef $CANARIES_PROTECTION
     #define CANARIES_PROTECION_CODE( ... )  __VA_ARGS__
     #define SET_CANARIES(this_)  set_canary (get_front_canary (this_)); \
                                  set_canary (get_back_canary (this_));   
 
     static const size_t CANARY = sizeof (canary_t);
+
 #else 
     #define CANARIES_PROTECION_CODE( ... ) ;
     #define SET_CANARIES                   ;  
@@ -19,10 +22,29 @@
 #ifdef $MEMORY_CLEAN_UPS
     #define MEMORY_CLEAN_UPS_CODE( ... )  __VA_ARGS__
     #define FILL_WITH_POISON( this_ ) fill_poison_all_after (this_, 0)
+
 #else 
     #define MEMORY_CLEAN_UPS_CODE( ... ) ;
     #define FILL_WITH_POISON( this_ )    ;    
 #endif
+
+#ifdef $STRUCT_VERIFICATION
+    #define STRUCT_VERIDICATION_CODE( ... ) __VA_ARGS__
+
+#else
+    #define STRUCT_VERIDICATION_CODE( ... ) ;
+#endif
+
+#define VERIFY( this_ )     \
+STRUCT_VERIDICATION_CODE    \
+(   \
+    {   \
+        int state = PBUFF_OK;   \
+        if ((state = protected_buff_state (this_)) != PBUFF_OK)     \
+            return state;   \
+    }   \
+)
+
 
 CANARIES_PROTECION_CODE (
     canary_t *get_front_canary (const ProtectedBuffer *this_);
@@ -35,7 +57,7 @@ MEMORY_CLEAN_UPS_CODE (
 
 int protected_buff_allocate   (ProtectedBuffer *this_, size_t n_elems, size_t el_sz)
 {
-    assert (this_);
+    VERIFY (this_);
 
     auto err = mem_allocate (&this_->mem, n_elems*el_sz + 2*CANARY, 1);
     if (err) return err;
@@ -49,7 +71,7 @@ int protected_buff_allocate   (ProtectedBuffer *this_, size_t n_elems, size_t el
 
 int protected_buff_deallocate (ProtectedBuffer *this_)
 {
-    assert (protected_buff_verify (this_));
+    VERIFY (this_);
 
     FILL_WITH_POISON (this_);
     this_->elem_sz = 0;
@@ -58,9 +80,12 @@ int protected_buff_deallocate (ProtectedBuffer *this_)
 
 int protected_buff_reallocate (ProtectedBuffer *this_ ,size_t n_elems)
 {
-    assert (protected_buff_verify (this_));
+    VERIFY (this_);
 
-    const size_t old_n_elems = protected_buff_size (this_);   
+
+    MEMORY_CLEAN_UPS_CODE (
+        const size_t old_n_elems = protected_buff_size (this_);  
+    ) 
     int err = mem_reallocate (&this_->mem, n_elems*this_->elem_sz + 2*CANARY, 1);
     if (!err)
     {
@@ -74,28 +99,26 @@ int protected_buff_reallocate (ProtectedBuffer *this_ ,size_t n_elems)
 
 void *protected_buff_get_data (const ProtectedBuffer *this_, size_t el_pos)
 {
-    assert (protected_buff_verify (this_));
-
+    VERIFY (this_);
     return mem_get_data (&this_->mem, el_pos*this_->elem_sz + CANARY, 1);
 }
 
 int protected_buff_set_data (ProtectedBuffer *this_, size_t el_pos, const void *new_data)
 {
-    assert (protected_buff_verify (this_));
-
+    VERIFY (this_);
     return mem_set_data (&this_->mem, el_pos*this_->elem_sz + CANARY, 1, new_data, this_->elem_sz);
 }
 
 size_t protected_buff_size    (const ProtectedBuffer *this_)
 {
-    assert (protected_buff_verify (this_));
+    VERIFY (this_);
     return (this_->mem.capacity - 2*CANARY)/this_->elem_sz;
 }
 
 ProtectedBufferState protected_buffer_state (const ProtectedBuffer *this_)
 {
-    assert (this_);
-
+    VERIFY (this_);
+    
     int state = PBUFF_OK;
     if (!mem_verify (&this_->mem)       ) state |= PBUFF_BAD_MEMORY;
     if (!this_->elem_sz                 ) state |= PBUFF_BAD_ELEM_SIZE;
@@ -116,8 +139,10 @@ bool protected_buff_verify (const ProtectedBuffer *this_)
 
     auto state = protected_buffer_state (this_);
     {
-        if (state & PBUFF_BAD_MEMORY)            LOG_MSG_LOC (ERROR, "Mem verifying failed");
-        if (state & PBUFF_BAD_ELEM_SIZE)         LOG_MSG_LOC (ERROR, "Elem size is zero"); 
+        if (state & PBUFF_BAD_MEMORY)            
+            LOG_MSG_LOC (ERROR, "Mem verifying failed");
+        if (state & PBUFF_BAD_ELEM_SIZE)         
+            LOG_MSG_LOC (ERROR, "Elem size is zero"); 
         CANARIES_PROTECION_CODE (
             if (state & PBUFF_BAD_DATA_FRONT_CANARY) 
                 LOG_MSG_LOC (ERROR, "Bad front canary %llx(%p)", *get_front_canary (this_), get_front_canary (this_));

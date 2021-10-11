@@ -9,6 +9,12 @@
  *  @todo: learn BFD (Binary File Descriptor library). Helps to do more datailed logs
  */
 
+#ifdef $DO_LOG_AND_TRACE
+    #define TRACE_CODE( ... ) __VA_ARGS__
+#else
+    #define TRACE_CODE( ... ) ;
+#endif
+
 WITHOUT_TRACE
 void damangle (const char *name, const char file);
 
@@ -20,6 +26,7 @@ struct CallInfo
 
 void __cyg_profile_func_enter (void *callee, void *caller) 
 {
+TRACE_CODE(    
     Dl_info info;
     if (dladdr (callee, &info)) 
     {
@@ -42,12 +49,14 @@ void __cyg_profile_func_enter (void *callee, void *caller)
         }
     } 
 
-    logger_indent_dec();
+    LOG_DEC();
+)
 }
 
 void __cyg_profile_func_exit (void *callee, void *caller) 
 {
-    logger_indent_inc();
+TRACE_CODE (
+    LOG_INC();
     Dl_info info = {};
     if (dladdr (callee, &info)) 
     {
@@ -69,8 +78,5 @@ void __cyg_profile_func_exit (void *callee, void *caller)
             demangled = nullptr;
         }
     }
-    else
-    {
-
-    }
+)
 }

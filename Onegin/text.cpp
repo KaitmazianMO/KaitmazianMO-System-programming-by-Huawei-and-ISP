@@ -8,6 +8,7 @@
 #include "../Utilities/Log/log.h"
 #include "../Utilities/Log/gcc_trace.h"
 
+size_t count_tokens (const char *text, const char *delims);
 Token get_token (char *text, const char *delim);
 
 TEXT_ERRORS text_ctor_by_file (Text *_this, FILE *pfile)
@@ -39,6 +40,9 @@ TEXT_ERRORS text_tokenize (Text *_this, const char *delim, bool null_term, token
     LOG_MSG (LOG, "START TOKENISZING");
 
     _this->null_terminated = null_term;
+
+    const size_t n_tok = count_tokens (_this->buff.data, delim);
+    vec_reserve_Token (&_this->tokens, n_tok);
 
     for (Token curr_tok = get_token (_this->buff.data, delim); 
         curr_tok.beg && *curr_tok.beg; 
@@ -82,4 +86,23 @@ Token get_token (char *text, const char *delim)
     tok.size = strcspn (tok.beg, delim);
     
     return tok;
+}
+
+
+size_t count_tokens (const char *text, const char *delims)
+{
+    assert (text);
+    assert (delims);
+
+    auto beg  = text + strspn (text, delims);
+    auto size = strcspn (beg, delims);    
+    size_t count = 1;
+    while (beg && *beg && size)
+    {
+        beg += strspn (beg + size, delims);
+        size = strcspn (beg, delims);
+        ++count; 
+    }
+
+    return count;
 }

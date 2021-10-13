@@ -17,8 +17,10 @@
 enum VEC_ERROR
 {
     VEC_SUCCESS = 0,
-    VEC_ALLOCATION_FAILED = 256, VEC_RESIZING_FAILED, 
-    VEC_LOGIC_ERROR, VEC_OUT_OF_RANGE,
+    VEC_ALLOCATION_FAILED = 256, 
+    VEC_RESIZING_FAILED, 
+    VEC_LOGIC_ERROR, 
+    VEC_OUT_OF_RANGE,
 };
 
 struct VECTOR_T
@@ -36,8 +38,6 @@ __attribute__ ((unused))
 static VEC_ERROR DECLARE (vec_ctor, T) (VECTOR_T *_this, size_t cap)
 {
     assert (_this);
-
-    LOG_MSG (LOG, "FUNCING VECTOR CONSTUCTING");
 
     int err = buf_ctor (VEC_PDATA, cap, sizeof (T));
     RETURN_IF_TRUE (err, VEC_ALLOCATION_FAILED)
@@ -91,6 +91,17 @@ static VEC_ERROR DECLARE (vec_set_elem, T) (VECTOR_T *_this, size_t idx, T val)
     RETURN_IF_TRUE (pelem == NULL, VEC_OUT_OF_RANGE)
 
     *(T *)pelem = val;
+    return VEC_SUCCESS;
+}
+
+__attribute__ ((unused))
+static VEC_ERROR DECLARE (vec_reserve, T) (VECTOR_T *_this, size_t cap)
+{
+    VEC_VERIFY
+
+    if (buf_resize (&_this->data, cap) != BUFF_SUCCESS)
+        return VEC_RESIZING_FAILED;
+
     return VEC_SUCCESS;
 }
 

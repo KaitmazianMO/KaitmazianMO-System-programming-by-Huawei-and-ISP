@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 #include "buffer.h"
+#include "../Utilities/Log/gcc_trace.h"
 #include "../Utilities/stdlib_addition.h"
 
 void buff_default_error_handler (BUFFER_ERRORS);

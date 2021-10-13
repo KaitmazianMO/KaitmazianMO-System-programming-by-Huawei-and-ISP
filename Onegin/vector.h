@@ -32,6 +32,7 @@ struct VECTOR_T
 #define VEC_CAP           (_this->data.capacity) 
 #define VEC_PDATA         (&_this->data)
 #define VEC_VERIFY        { assert (_this); assert (VEC_SIZE <= VEC_CAP); }
+__attribute__ ((unused))
 static VEC_ERROR DECLARE (vec_ctor, T) (VECTOR_T *_this, size_t cap)
 {
     assert (_this);
@@ -45,6 +46,7 @@ static VEC_ERROR DECLARE (vec_ctor, T) (VECTOR_T *_this, size_t cap)
     return VEC_SUCCESS;
 }
 
+__attribute__ ((unused))
 static VEC_ERROR DECLARE (vec_push_back, T) (VECTOR_T *_this, T val)
 {
     VEC_VERIFY
@@ -65,6 +67,7 @@ static VEC_ERROR DECLARE (vec_push_back, T) (VECTOR_T *_this, T val)
     return VEC_SUCCESS;
 } 
 
+__attribute__ ((unused))
 static VEC_ERROR DECLARE (vec_get_elem, T) (VECTOR_T *_this, size_t idx, T *pval)
 {
     VEC_VERIFY
@@ -78,6 +81,7 @@ static VEC_ERROR DECLARE (vec_get_elem, T) (VECTOR_T *_this, size_t idx, T *pval
     return VEC_SUCCESS;
 }
 
+__attribute__ ((unused))
 static VEC_ERROR DECLARE (vec_set_elem, T) (VECTOR_T *_this, size_t idx, T val)
 {
     VEC_VERIFY
@@ -90,7 +94,7 @@ static VEC_ERROR DECLARE (vec_set_elem, T) (VECTOR_T *_this, size_t idx, T val)
     return VEC_SUCCESS;
 }
 
-
+__attribute__ ((unused))
 static VEC_ERROR DECLARE (vec_dtor, T) (VECTOR_T *_this)
 {
     VEC_VERIFY

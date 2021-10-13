@@ -1,4 +1,5 @@
 #include "onegin_text.h"
+#include "../Utilities/Log/gcc_trace.h"
 #include "../Utilities/stdlib_addition.h"
 
 #include <string.h>
@@ -223,7 +224,7 @@ static bool print_rhymes (vector_Token *tokens, FILE *file)
         {
             if (!(vec_get_elem_Token (tokens, i,     &tok1) || 
                   vec_get_elem_Token (tokens, i + 2, &tok2)))
-                str_num += print_4_lines (file, tok1, tok2, {.beg = NULL}, {.beg = NULL});         
+                str_num += print_4_lines (file, tok1, tok2, {.beg = NULL, .size = 0}, {.beg = NULL, .size = 0});         
             else
             {
                 err = true;

@@ -8,7 +8,7 @@
 #include "../Utilities/Log/log.h"
 #include "../Utilities/Log/gcc_trace.h"
 
-static Token get_token (char *text, const char *delim);
+Token get_token (char *text, const char *delim);
 
 TEXT_ERRORS text_ctor_by_file (Text *_this, FILE *pfile)
 {
@@ -68,7 +68,7 @@ TEXT_ERRORS text_dtor (Text *_this)
     return err ? TEXT_DESTRUCTING_FAILED : TEXT_SUCCESS;
 }
 
-static Token get_token (char *text, const char *delim)
+Token get_token (char *text, const char *delim)
 {
     assert (text);
     assert (delim);

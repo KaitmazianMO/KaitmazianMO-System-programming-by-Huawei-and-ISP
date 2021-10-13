@@ -20,7 +20,7 @@ bool is_chapter_title (const char* str);
 LOG_WIHTOUT_TRACE
 int main (int argc, char *argv[])
 {
-    logger_set_log_file_path ("onegin.log");
+    LOG_SET_FILE_NAME ("onegin.log");
 
     if (argc != 3)
     {
@@ -35,33 +35,35 @@ int main (int argc, char *argv[])
         exit (1);
     }                                                                             
 
+    int err = 0;
     OneginText onegin_text = {};
-    if (onegin_text_ctor (&onegin_text, onegin_text_f, verify_line) == ONEGIN_TEXT_SUCCESS)
+    if ((err = onegin_text_ctor (&onegin_text, onegin_text_f, verify_line)) == ONEGIN_TEXT_SUCCESS)
     {  
-        onegin_text_sort (&onegin_text, custom_line_comparator);
+        err |= onegin_text_sort (&onegin_text, custom_line_comparator);
 
         FILE *onegin_output_f = fopen (argv[2], "wb");
         if (!onegin_output_f)
         {
-            fprintf (stderr, "Can't open %s\n", argv[2]);  
-            exit (1);  
+            fprintf (stderr, "Can't open %s\n", argv[2]); 
+            err |= onegin_text_dtor (&onegin_text); 
+            return err;  
         }           
 
-        onegin_text_dump (&onegin_text, onegin_output_f, "Евгений Онегин, отсортированный по возрастанию");
-        onegin_text_rhymes_dump (&onegin_text, onegin_output_f, "Евгений Онегин, by Netflix", custom_reverse_line_comparator);
-        onegin_text_raw_dump (&onegin_text, onegin_output_f, "Оригинальный Евгений Онегин");
+        err |= onegin_text_dump (&onegin_text, onegin_output_f, "Евгений Онегин, отсортированный по возрастанию");
+        err |= onegin_text_rhymes_dump (&onegin_text, onegin_output_f, "Евгений Онегин, by Netflix", custom_reverse_line_comparator);
+        err |= onegin_text_raw_dump (&onegin_text, onegin_output_f, "Оригинальный Евгений Онегин");
 
         fclose (onegin_output_f);
     }
     else
     {
-        return 1;
+        return err;
     }
 
-    onegin_text_dtor (&onegin_text);
+    err |= onegin_text_dtor (&onegin_text);
     fclose (onegin_text_f);
 
-    return 0;
+    return err;
 }
 
 int custom_line_comparator (const void *l, const void *r)
@@ -145,15 +147,4 @@ bool is_chapter_title (const char* str)
     }
 
     return true;    
-
-    //assert (str != NULL);
-//
-    //for (size_t i = 0; *(str + i) != '\n' && *(str + i) != '\0'; ++i)
-    //{
-    //    if (!(isupper (str[i]) || isspace (str[i])))
-    //        return false;
-    //}
-//
-    //return true;
 }
-

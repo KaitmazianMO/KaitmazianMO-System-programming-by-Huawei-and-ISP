@@ -4,10 +4,10 @@ OPTIONS            = -D\$$DO_LOG_AND_TRACE
 WARNIGS_AND_ERRORS = -Wall -Wextra -Werror
 FLAGS   		   = $(WARNIGS_AND_ERRORS) -g -O2 -rdynamic -ldl -lbfd -finstrument-functions $(OPTIONS)
 
-all: Buffer.o onegin_text.o text.o log.o gcc_trace.o 
+all: buffer.o onegin_text.o text.o log.o gcc_trace.o 
 	$(CC) main.cpp buffer.o onegin_text.o text.o stdlib_addition.o log.o gcc_trace.o $(FLAGS) -o $(APP)
 
-Buffer.o: buffer.h buffer.cpp log.o gcc_trace.o 
+buffer.o: buffer.h buffer.cpp log.o gcc_trace.o 
 	$(CC) -c buffer.cpp $(FLAGS)
 
 onegin_text.o: onegin_text.h onegin_text.cpp log.o gcc_trace.o

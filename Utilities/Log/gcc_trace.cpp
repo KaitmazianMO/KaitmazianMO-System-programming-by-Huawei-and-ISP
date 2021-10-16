@@ -1,7 +1,8 @@
 #include "gcc_trace.h"
+#include "../c_dangeon.h"
 
 #include <stdio.h>
-#include <bfd.h>
+//#include <bfd.h>
 #include <dlfcn.h>
 #include <cxxabi.h>
 
@@ -15,6 +16,14 @@
     #define TRACE_CODE( ... ) ;
 #endif
 
+#ifndef $LOG_TRACE_FILE_NAME 
+    #define $LOG_TRACE_FILE_NAME ".trace"
+#endif
+
+#ifndef $LOG_FILE_NAME
+    #define $LOG_FILE_NAME ".log"
+#endif
+
 WITHOUT_TRACE
 void damangle (const char *name, const char file);
 
@@ -26,6 +35,7 @@ struct CallInfo
 
 void __cyg_profile_func_enter (void *callee, void *caller) 
 {
+    UNUSED (caller);
 TRACE_CODE(    
     Dl_info info;
     if (dladdr (callee, &info)) 
@@ -55,6 +65,7 @@ TRACE_CODE(
 
 void __cyg_profile_func_exit (void *callee, void *caller) 
 {
+    UNUSED (caller);
 TRACE_CODE (
     LOG_INC();
     Dl_info info = {};

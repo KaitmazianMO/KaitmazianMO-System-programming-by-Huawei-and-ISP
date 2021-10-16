@@ -22,10 +22,9 @@ const char *str_type (MSG_TYPE type);
 
 struct Logger 
 {
-    const char *log_file_name;
     FILE       *file ;
     size_t      indent;
-    bool        dumping;  // mode for writing multy-line messages almost without formating
+    bool        dumping;  
 };
 
 #ifdef $DO_LOG_AND_TRACE
@@ -50,7 +49,7 @@ struct Logger
 
     #define LOG_PRINT_INDENT()  logger_print_indent()
 #else
-    static Logger $__logger_instatnce__$ = Logger{"stderr", stderr, 0, 0};
+    static Logger $__logger_instatnce__$ = Logger { stderr, 0, false };
 
     #define LOG_MSG_LOC( type, ... ) ;
 

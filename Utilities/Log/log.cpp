@@ -54,9 +54,6 @@ void logger_message_localized (MSG_TYPE type, const char *file_s,
    
     if (format_line && instance)
     {
-        // logger_message (type, format_line, __ARGS__);
-        // fseek (get_instance()->file, SEEK_CURR, -1);
-        // fprintf (file, " <%s:%s:%zu>", file_s, func_s, line);
         auto type_s = str_type (type);
         fprintf (file, "%*.s", 4*indent, ""); // printing 4*indent spaces
         fprintf (file, "[%s] ", type_s);

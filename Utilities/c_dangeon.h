@@ -11,4 +11,8 @@
 #define MIN( l, r )  (((l) < (r)) ? (l) : r)
 #define MAX( l, r )  (((l) > (r)) ? (l) : r)
 
+#define UNUSED( val ) ((void)(val))
+
+#define CAST( type, val )  ((type)(val))
+
 #endif

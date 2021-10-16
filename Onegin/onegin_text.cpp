@@ -5,12 +5,12 @@
 #include <string.h>
 #include <time.h>
 
-static int  default_line_comparator         (const void *l, const void *r);
-static int  default_reverse_line_comparator (const void *l, const void *r);
-static void write_nlines_to_file            (vector_Token *tokens, size_t nLines, FILE *file);
-static void print_title                     (FILE* file, const char *str);
-size_t      print_4_lines                   (FILE *file, Token tok1, Token tok2, Token tok3, Token tok4);
-static bool print_rhymes                    (vector_Token *tokens, FILE *file);
+static int    default_line_comparator         (const void *l, const void *r);
+static int    default_reverse_line_comparator (const void *l, const void *r);
+static void   write_nlines_to_file            (vector_Token *tokens, size_t nLines, FILE *file);
+static void   print_title                     (FILE* file, const char *str);
+static size_t print_4_lines                   (FILE *file, Token tok1, Token tok2, Token tok3, Token tok4);
+static bool   print_rhymes                    (vector_Token *tokens, FILE *file);
 
 ONEGIN_TEXT_ERROR onegin_text_ctor (OneginText *_this, FILE *finput, token_verifier_t tok_verify)
 {
@@ -20,7 +20,7 @@ ONEGIN_TEXT_ERROR onegin_text_ctor (OneginText *_this, FILE *finput, token_verif
     if (text_ctor_by_file (&_this->text, finput))
         return ONEGIN_TEXT_CONSTRUCTING_FAILED;
 
-    if (text_tokenize (&_this->text, "\n", NULL_TERMINATED, tok_verify))
+    if (text_tokenize (&_this->text, "\n\r", NULL_TERMINATED, tok_verify))
     {
         return ONEGIN_TEXT_TOKENIZING_FAILED;
     }
@@ -78,7 +78,6 @@ ONEGIN_TEXT_ERROR onegin_text_raw_dump (OneginText *_this, FILE *fout, const cha
         else
             fputc ('\n', fout);
     }
-    //dump_buff (_this->text.buff.data, _this->text.buff.capacity, fout)
     return ONEGIN_TEXT_SUCCESS;
 }
 
@@ -236,7 +235,7 @@ static bool print_rhymes (vector_Token *tokens, FILE *file)
     return err;
 }
 
-size_t print_4_lines (FILE *file, Token tok1, Token tok2, Token tok3, Token tok4)
+static size_t print_4_lines (FILE *file, Token tok1, Token tok2, Token tok3, Token tok4)
 {
     #define PRINT_LINE( tok )  if(tok.beg == NULL)                                    \
                                     fprintf(file, "\n");                              \

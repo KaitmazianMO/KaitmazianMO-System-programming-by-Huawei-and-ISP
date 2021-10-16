@@ -54,7 +54,7 @@ static VEC_ERROR DECLARE (vec_push_back, T) (VECTOR_T *_this, T val)
     int err = 0;
     if (VEC_SIZE == VEC_CAP)
     {
-        err = buf_resize (VEC_PDATA, (VEC_SIZE + 1) * 2);
+        err = buf_resize (VEC_PDATA, (VEC_SIZE + (VEC_SIZE ? 0 : 1)) * 2);
         RETURN_IF_TRUE (err, VEC_RESIZING_FAILED)
     }
 

@@ -150,18 +150,35 @@ bool protected_buff_verify (const ProtectedBuffer *this_)
     auto state = protected_buff_state (this_);
     {
         if (state & PBUFF_BAD_MEMORY)            
-            LOG_MSG_LOC (ERROR, "Mem verifying failed");
+            LOG_MSG_LOC (ERROR, protected_buff_str_error (PBUFF_BAD_MEMORY));
         if (state & PBUFF_BAD_ELEM_SIZE)         
-            LOG_MSG_LOC (ERROR, "Elem size is zero"); 
+            LOG_MSG_LOC (ERROR, protected_buff_str_error (PBUFF_BAD_ELEM_SIZE)); 
         CANARIES_PROTECION_CODE (
             if (state & PBUFF_BAD_DATA_FRONT_CANARY) 
-                LOG_MSG_LOC (ERROR, "Bad front canary %llx(%p)", *get_front_canary (this_), get_front_canary (this_));
+                LOG_MSG_LOC (ERROR, "%s %llx(%p)", protected_buff_str_error (PBUFF_BAD_DATA_FRONT_CANARY),
+                                                  *get_front_canary (this_), get_front_canary (this_));
             if (state & PBUFF_BAD_DATA_BACK_CANARY)  
-                LOG_MSG_LOC (ERROR, "Bad back canary %llx(%p)", *get_back_canary (this_), get_back_canary (this_));   
+                LOG_MSG_LOC (ERROR, "%s %llx(%p)", protected_buff_str_error (PBUFF_BAD_DATA_BACK_CANARY), 
+                                                  *get_back_canary (this_), get_back_canary (this_));   
         )
     }
 
     return state == PBUFF_OK;
+}
+
+const char *protected_buff_str_error (int err)
+{
+    if (err & PBUFF_BAD_MEMORY)            
+        return "Mem verifying failed";
+    if (err & PBUFF_BAD_ELEM_SIZE)         
+        return "Elem size is zero"; 
+    CANARIES_PROTECION_CODE (
+        if (err & PBUFF_BAD_DATA_FRONT_CANARY) 
+            return "Bad front canary";
+        if (err & PBUFF_BAD_DATA_BACK_CANARY)  
+            return "Bad back canary";
+    )  
+    return "";
 }
 
 protected_buff_error_handler_t protected_buff_set_error_handler (protected_buff_error_handler_t mew_handler)

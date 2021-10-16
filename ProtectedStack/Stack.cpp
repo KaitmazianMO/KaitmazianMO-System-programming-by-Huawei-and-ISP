@@ -2,10 +2,12 @@
 #include "ProtectedBuffer.h"
 #include "hash.h"
 #include "Canary.h"
+
 #include <assert.h>
 #include <string.h>
 
 const size_t GROW_COEFF = 2;
+static stk_error_handler_t handler = NULL;
 
 #ifdef $CANARIES_PROTECTION
     #define CANARIES_PROTECTION_CODE( ... ) __VA_ARGS__
@@ -63,6 +65,21 @@ MEMORY_CLEAN_UPS_CODE (
 
 #define CLEAN_ELEM( this_, n) MEMORY_CLEAN_UPS_CODE (clean_elem (this_, n); )
 
+#ifdef $STRUCT_VERIFICATION
+    #define STRUCT_VERIFICATION_CODE( ... ) __VA_ARGS__
+#else
+    #define STRUCT_VERIFICATION_CODE( ... )  
+#endif
+
+#define STACK_VERIFY( this_ ) \
+STRUCT_VERIFICATION_CODE(   \
+    {   \
+        int state = stack_state (this_);    \
+        if (state != STACK_OK)  \
+            return state;   \
+    }   \
+)   \
+
 Stack *stack_ctor (size_t size, size_t elem_sz)
 {
     Stack *pstk = (Stack *)calloc (1, sizeof (*pstk));
@@ -85,7 +102,7 @@ Stack *stack_ctor (size_t size, size_t elem_sz)
 
 int stack_push (Stack *this_, const void *data)
 {
-    assert (stack_verify (this_));
+    STACK_VERIFY (this_);
 
     int err = 0;
     if (protected_buff_size (&this_->buff) == this_->curr_pos)
@@ -100,25 +117,35 @@ int stack_push (Stack *this_, const void *data)
     return err;
 }
 
-int stack_pop (Stack *this_, void *dest)
+int stack_pop (Stack *this_)
 {
-    assert (stack_verify (this_));
-    assert (dest);
+    STACK_VERIFY (this_);
 
     if (this_->curr_pos == 0) return STK_POPPING_EMPTY_STACK;
-
-    auto ptop = protected_buff_get_data (&this_->buff, --this_->curr_pos);
-    memmove (dest, ptop, this_->buff.elem_sz);
+    --this_->curr_pos;
+    
     CLEAN_ELEM (this_, this_->curr_pos);
-
 
     UPDATE_HASHES (this_);    
     return STACK_OK;
 }
 
+int stack_top (const Stack *this_, void *dest)
+{
+    STACK_VERIFY (this_);
+    assert (dest);
+
+    if (this_->curr_pos == 0) return STK_PEEKING_EMPTY_STACK;
+
+    auto ptop = protected_buff_get_data (&this_->buff, this_->curr_pos - 1);
+    memmove (dest, ptop, this_->buff.elem_sz);
+    
+    return STACK_OK;
+}
+
 int stack_dtor (Stack *this_)
 {
-    assert (stack_verify (this_));
+    STACK_VERIFY (this_);
 
     int err= 0;
     err = protected_buff_deallocate (&this_->buff);
@@ -131,9 +158,9 @@ int stack_dtor (Stack *this_)
 WITHOUT_TRACE
 static void print_indent (FILE *file, int indent) { fprintf (file, "%*.s", indent, ""); }
 
-void stack_dump (const Stack *this_, FILE *file, int indent)
+int stack_dump (const Stack *this_, FILE *file, int indent)
 {
-    assert (stack_verify (this_));
+    STACK_VERIFY (this_);
     if (file == NULL) file = stderr;
 
     START_DUMPING ("Stack dump");
@@ -170,26 +197,31 @@ void stack_dump (const Stack *this_, FILE *file, int indent)
     fprintf (file, "\t}\n");
 
     FINISH_DUMPING();
+    return STACK_OK;
 }
 
-void stack_dump_to_log (const Stack *this_)
+int stack_dump_to_log (const Stack *this_)
 {
-    assert (stack_verify (this_));
+    STACK_VERIFY (this_);
 
     START_DUMPING ("Stack dump");
 
-    stack_dump (this_, LOG_INSTANCE()->file, 4*LOG_INSTANCE()->indent);
+    int err = stack_dump (this_, LOG_INSTANCE()->file, 4*LOG_INSTANCE()->indent);
 
     FINISH_DUMPING();
+
+    return err;
 }
 
-void stack_set_elem_printer (Stack *this_, stk_elem_printer_t printer)
+int stack_set_elem_printer (Stack *this_, stk_elem_printer_t printer)
 {   
-    assert (stack_verify (this_));
+    STACK_VERIFY (this_);
     assert (printer);
 
     this_->print_elem = printer;
     UPDATE_HASHES (this_);    
+
+    return STACK_OK;
 }
 
 int stack_state (const Stack *this_)
@@ -219,21 +251,55 @@ bool stack_verify (const Stack *this_)
     int state = stack_state (this_);
     CANARIES_PROTECTION_CODE (
     if (state & STK_BAD_FRONT_CANARY)
-        LOG_MSG_LOC (ERROR, "Bad front canary %llx(%p)", this_->front_canary, &this_->front_canary);
+        LOG_MSG_LOC (ERROR, "%s %llx(%p)", stack_str_state (STK_BAD_FRONT_CANARY), this_->front_canary, &this_->front_canary);
     if (state & STK_BAD_BACK_CANARY)  
-        LOG_MSG_LOC (ERROR, "Bad back canary %llx(%p)", this_->back_canary, &this_->back_canary);
+        LOG_MSG_LOC (ERROR, "%s %llx(%p)", stack_str_state (STK_BAD_BACK_CANARY), this_->back_canary, &this_->back_canary);
     )
     
     if (state & STK_BUFFER_VERIFICATION_FAILED)   
-        LOG_MSG_LOC (ERROR, "Buffer verifying failed");
+        LOG_MSG_LOC (ERROR, stack_str_state (STK_BUFFER_VERIFICATION_FAILED));
     
     HASH_PROTECTION_CODE (
         if (state & STK_HASH_MISMATCH) 
-            LOG_MSG_LOC (ERROR, "Stack hash was suddenly changed from outside,");
+            LOG_MSG_LOC (ERROR, stack_str_state (STK_HASH_MISMATCH));
         if (state & STK_DATA_HASH_MISMATCH)
-            LOG_MSG_LOC (ERROR, "Stack data hash was suddenly changed from outside");    
+            LOG_MSG_LOC (ERROR, stack_str_state (STK_DATA_HASH_MISMATCH));    
     )
     return state == STACK_OK;
+}
+
+const char *stack_str_state (int state)
+{
+    CANARIES_PROTECTION_CODE (
+    if (state & STK_BAD_FRONT_CANARY)
+        return "Bad front canary";
+    if (state & STK_BAD_BACK_CANARY)  
+        return "Bad back canary";
+    )
+    
+    if (state & STK_BUFFER_VERIFICATION_FAILED)   
+        return "Buffer verifying failed";
+    
+    HASH_PROTECTION_CODE (
+        if (state & STK_HASH_MISMATCH) 
+            return "Stack hash was suddenly from outside";
+        if (state & STK_DATA_HASH_MISMATCH)
+            return "Stack data hash was changed from outside";    
+    )
+    return "";
+}
+
+stk_error_handler_t stack_set_handler (stk_error_handler_t new_handler)
+{
+    auto old_hadler = handler;
+    handler = new_handler;
+    return old_hadler;
+}
+
+void stack_handle (Stack *this_, int state)
+{
+    if (handler)
+        handler (this_, state);
 }
 
 HASH_PROTECTION_CODE (

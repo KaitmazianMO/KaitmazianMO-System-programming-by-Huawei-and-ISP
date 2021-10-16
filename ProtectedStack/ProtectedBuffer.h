@@ -30,6 +30,7 @@ size_t protected_buff_size    (const ProtectedBuffer *this_);
 void *protected_buff_get_data (const ProtectedBuffer *this_, size_t el_pos);
 int protected_buff_set_data (ProtectedBuffer *this_, size_t el_pos, const void *new_data);
 bool protected_buff_verify (const ProtectedBuffer *this_);
+const char *protected_buff_str_error (int err);
 ProtectedBufferState protected_buff_state (const ProtectedBuffer *this_);
 protected_buff_error_handler_t protected_buff_set_error_handler (protected_buff_error_handler_t handler);
 

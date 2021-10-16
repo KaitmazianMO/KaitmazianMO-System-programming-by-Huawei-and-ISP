@@ -27,7 +27,7 @@ typedef void (*mem_error_handler_t) (const Memory *this_, MEMORY_ERRORS err);
 int mem_allocate   (Memory *this_, size_t n_elems, size_t el_size);
 int mem_deallocate (Memory *this_);
 int mem_reallocate (Memory *this_ ,size_t n_elems, size_t el_size);
-int mem_fill (Memory *this_, char byte, size_t from, size_t to);
+int mem_fill       (Memory *this_, char byte, size_t from, size_t to);
 
 void *mem_get_data (const Memory *this_, size_t el_offset, size_t el_sz);
 int mem_set_data (Memory *this_, size_t el_offset, size_t el_sz, const void *new_data, size_t data_sz);

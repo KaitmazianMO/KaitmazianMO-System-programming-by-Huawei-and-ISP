@@ -15,4 +15,10 @@
 
 #define CAST( type, val )  ((type)(val))
 
+#define AS_FUNC( ... ) \
+do {   \
+    __VA_ARGS__     \
+} while (0)  \
+
+
 #endif

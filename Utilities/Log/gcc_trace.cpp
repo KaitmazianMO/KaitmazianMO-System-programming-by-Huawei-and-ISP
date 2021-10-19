@@ -1,8 +1,8 @@
 #include "gcc_trace.h"
 #include "../c_dangeon.h"
+#include "log.h"
 
 #include <stdio.h>
-//#include <bfd.h>
 #include <dlfcn.h>
 #include <cxxabi.h>
 
@@ -10,84 +10,121 @@
  *  @todo: learn BFD (Binary File Descriptor library). Helps to do more datailed logs
  */
 
-#ifdef $DO_LOG_AND_TRACE
+#ifdef $DO_TRACE
     #define TRACE_CODE( ... ) __VA_ARGS__
 #else
     #define TRACE_CODE( ... ) ;
 #endif
 
-#ifndef $LOG_TRACE_FILE_NAME 
-    #define $LOG_TRACE_FILE_NAME ".trace"
+#ifndef $TRACE_FILE_NAME 
+    #define $TRACE_FILE_NAME ".trace"
 #endif
 
-#ifndef $LOG_FILE_NAME
-    #define $LOG_FILE_NAME ".log"
-#endif
+TRACE_CODE
+(
+    struct TraceContoller 
+    {
+        FILE  *file;
+        int    indent;
+    };
 
-WITHOUT_TRACE
-void damangle (const char *name, const char file);
+    WITHOUT_TRACE
+    TraceContoller *tracer()
+    {
+        static TraceContoller trace_controller {
+            .file = fopen ($TRACE_FILE_NAME , "wb"),
+            .indent     = 0
+        };
+        assert (trace_controller.file && "TRACE FILE OPEN FAILED");
+        return &trace_controller;
+    }
+)
 
 struct CallInfo
 {
     const char *func_name;
     const char *file_name;
+    bool        func_demangled;
 };
+
+WITHOUT_TRACE
+CallInfo get_info (void *callee, void *caller);
+
+WITHOUT_TRACE
+void trace (MSG_TYPE type, CallInfo info);
 
 void __cyg_profile_func_enter (void *callee, void *caller) 
 {
+    UNUSED (callee);
     UNUSED (caller);
-TRACE_CODE(    
-    Dl_info info;
-    if (dladdr (callee, &info)) 
-    {
-        int status = 0;
-        const char* name = NULL;
-        char* demangled = abi::__cxa_demangle (info.dli_sname, nullptr, 0, &status);
-        if (status == 0) 
-        {
-            name = demangled ? demangled : "[not demangled]";
-        } 
-        else 
-        {
-            name = info.dli_sname ? info.dli_sname : "[no dli_sname]";
-        }
-        LOG_MSG (CALL, "%s <%s>", name, info.dli_fname);
-        if (demangled) 
-        {
-            delete demangled;
-            demangled = nullptr;
-        }
-    } 
-
-    LOG_DEC();
-)
+    TRACE_CODE(    
+        CallInfo info = get_info (callee, caller);
+        trace (CALL, info);
+        if (info.func_demangled)
+            delete info.func_name;
+        ++tracer()->indent;
+    )
 }
 
 void __cyg_profile_func_exit (void *callee, void *caller) 
 {
+    UNUSED (callee);
     UNUSED (caller);
-TRACE_CODE (
-    LOG_INC();
+    TRACE_CODE (
+        --tracer()->indent;
+        CallInfo info = get_info (callee, caller);
+        trace (QUIT, info);
+        if (info.func_demangled)
+            delete info.func_name;
+    )
+}
+
+WITHOUT_TRACE
+CallInfo get_info (void *callee, void *caller)
+{
+    CallInfo call_info = { "unknown", "unknown", false };
     Dl_info info = {};
     if (dladdr (callee, &info)) 
     {
         int status = 0;
-        const char* name = NULL;
         char* demangled = abi::__cxa_demangle (info.dli_sname, nullptr, 0, &status);
         if (status == 0) 
         {
-            name = demangled ? demangled : "[not demangled]";
+            call_info.func_name = demangled ? demangled : "[not demangled]";
         } 
         else 
         {
-            name = info.dli_sname ? info.dli_sname : "[no dli_sname]";
+            call_info.func_name = info.dli_sname ? info.dli_sname : "[no dli_sname]";
         }
-        LOG_MSG (QUIT, "%s <%s>", name, info.dli_fname); //fprintf(log, "%*s[QUIT] %s <%s>\n", 4*--stk_offset, "", name, info.dli_fname);
         if (demangled) 
         {
-            delete demangled;
-            demangled = nullptr;
+            call_info.func_demangled = true;
         }
-    }
+        call_info.file_name = info.dli_fname;
+    } 
+    return call_info;
+}
+
+#define save_fprintf( file, ... ) file && fprintf (file, __VA_ARGS__)
+#define save_fflush( file )       file && fflush (file);
+
+WITHOUT_TRACE
+void trace (MSG_TYPE type, CallInfo info)
+{
+TRACE_CODE (
+    auto formated_msg = logger_get_formated_msg (type, "%s <%s>", info.func_name, info.file_name);
+    save_fprintf (tracer()->file, "%*.s", 4*tracer()->indent, "");
+    save_fprintf (tracer()->file, "%s\n", formated_msg);
+    save_fflush (tracer()->file);
+)
+}
+
+void gcc_trace_msg (const char *msg)
+{
+TRACE_CODE (
+    //assert (trace_file && "TRACE FILE WAS NOT OPENED");
+    save_fprintf (tracer()->file, "%*.s", 4*tracer()->indent, "");
+    save_fprintf (tracer()->file, "%s\n", msg);
+    save_fflush (tracer()->file);
 )
 }

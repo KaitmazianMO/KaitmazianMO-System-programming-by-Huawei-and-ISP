@@ -1,117 +1,97 @@
 #include "log.h"
 
 #include <assert.h>
+#include <stdlib.h>
 #include <stdarg.h>
 
-static const char *log_file_name = ".log";
+static const size_t msg_sz = 1024;
+static       size_t msg_off = 0;  // last formated_msg offset, not localized msg
+static       char msg_buff[msg_sz + 1] = {};
 
-Logger *logger_get_instance()
+#define MSG_END       (msg_buff + msg_off)
+#define MSG_AVAILABLE (msg_sz - msg_off)
+
+LOG_WIHTOUT_TRACE
+char *get_formated_msg (MSG_TYPE type, const char *format_line, va_list args_start);
+
+//void logger_message (MSG_TYPE type, const char *format_line, ...)
+//{
+//    Logger *instance = logger_get_instance();
+//    FILE *file = instance->file;
+//    int indent = (int)instance->indent;
+//
+//    auto formated_msg = "";
+//    if (format_line)
+//    {
+//        va_list arg_list;    
+//        va_start (arg_list, format_line);    
+//        auto formated_msg = get_formated_msg (type, format_line, arg_list);   
+//        va_end (arg_list);
+//    }
+//
+//    if (format_line)
+//    {
+//        if (!logger_get_instance()->dumping)
+//        {
+//            save_fprintf (file, "%*.s", 4*indent, ""); // printing 4*indent spaces        
+//            save_fprintf (file, formated_msg);
+//            save_fprintf (file, "\n");
+//            save_fflush (file);
+//            if (type == FATAL)
+//            {
+//                // temporary desision, may be an call of user-fatal-error-function
+//                exit (1);
+//            }
+//        }
+//        else // dumping mode has no formating
+//        {
+//            push_va_fprintf (file, formated_msg);    
+//            save_fflush (file);                    
+//        }
+//    }
+//}
+
+char *logger_get_formated_msg_localized (Location loc, MSG_TYPE type, const char *format_line, ...)
 {
-    static Logger instance = {
-        .log_file_name = log_file_name,
-        .file = fopen (log_file_name, "wb"),
-        .indent = 0,
-        .dumping = false
-    };
-    assert (instance.file && "Can't opent a log file!");
-    return &instance; 
+    va_list arg_list;    
+    va_start (arg_list, format_line);    
+    auto formated_msg = get_formated_msg (type, format_line, arg_list);   
+    va_end (arg_list);
+
+    snprintf (MSG_END, MSG_AVAILABLE, " <%s:%s:%d>", loc.file_name, loc.function_name, loc.nline);
+
+    return formated_msg;
 }
 
-void logger_set_log_file_path (const char *path)
+char *logger_get_formated_msg (MSG_TYPE type, const char *format_line, ...)
 {
-    log_file_name = path;
+    va_list arg_list;    
+    va_start (arg_list, format_line);    
+    auto formated_msg = get_formated_msg (type, format_line, arg_list);   
+    va_end (arg_list);
+
+    return formated_msg;
 }
 
-void logger_message (MSG_TYPE type, const char *format_line, ...)
+char *get_formated_msg (MSG_TYPE type, const char *format_line, va_list args_start)
 {
-    if (logger_get_instance()->dumping) return;
-    Logger *instance = logger_get_instance();
-    FILE *file = instance->file;
-    int indent = (int)instance->indent;
+    msg_off = 0;
 
-    if (format_line && instance)
+    auto type_s = str_type (type);     
+    msg_off += snprintf (MSG_END, MSG_AVAILABLE, "[%s] ", type_s);
+
+    if (LOG <= type && type <= FATAL)
     {
-        auto type_s = str_type (type);
-        fprintf (file, "%*.s", 4*indent, ""); // printing 4*indent spaces
-        fprintf (file, "[%s] ", type_s);
-        if (type != CALL && type != QUIT && type != DUMP) fprintf (file, "- ");
-        va_list arg_list_p;
-        va_start (arg_list_p, format_line);
-        vfprintf (file, format_line, arg_list_p);
-        va_end (arg_list_p);
-        fputc ('\n', file);
-        fflush (file);
+        msg_off += snprintf (MSG_END, MSG_AVAILABLE, "- \"");
+        msg_off += vsnprintf (MSG_END, MSG_AVAILABLE, format_line, args_start);
+        msg_off += snprintf (MSG_END, MSG_AVAILABLE, "\"");
     }
-}
-
-void logger_message_localized (MSG_TYPE type, const char *file_s, 
-    const char *func_s, size_t line, const char *format_line, ...)
-{
-    if (logger_get_instance()->dumping) return;    
-    Logger *instance = logger_get_instance();
-    FILE *file = instance->file;
-    int indent = (int)instance->indent;
-   
-    if (format_line && instance)
-    {
-        auto type_s = str_type (type);
-        fprintf (file, "%*.s", 4*indent, ""); // printing 4*indent spaces
-        fprintf (file, "[%s] ", type_s);
-        if (type != CALL && type != QUIT && type != DUMP) fprintf (file, "- ");
-        va_list arg_list_p;
-        va_start (arg_list_p, format_line);
-        vfprintf (file, format_line, arg_list_p);
-        va_end (arg_list_p);
-        fprintf (file, " <%s:%s:%zu>", file_s, func_s, line);
-        fputc ('\n', file);
-        fflush (file);
-    }
-}
-
-void logger_start_dumping (const char *title)
-{
-    logger_message (DUMP, title);
-    logger_get_instance()->dumping = true;
-}
-
-void logger_raw_str (const char *format_line, ...)
-{
-    assert (logger_get_instance()->dumping);
-
-    Logger *instance = logger_get_instance();
-    FILE *file = instance->file;
-    
-    if (format_line && instance)
-    {
-        va_list arg_list_p;
-        va_start (arg_list_p, format_line);
-        vfprintf (file, format_line, arg_list_p);
-        va_end (arg_list_p);
-        fflush (file);
-    }
-}
-
-void logger_print_indent()
-{
-    fprintf (logger_get_instance()->file, "%*.s", (int)(4*logger_get_instance()->indent), "");
-}
-
-void logger_finish_dumping()
-{
-    logger_get_instance()->dumping = false;
-}
-
-void logger_indent_dec()
-{
-    ++logger_get_instance()->indent;
-}
-
-void logger_indent_inc()
-{
-    if (logger_get_instance()->indent > 0)
-        --logger_get_instance()->indent;
     else
-        logger_get_instance()->indent = 0;
+    {
+        msg_off += vsnprintf (MSG_END, MSG_AVAILABLE, format_line, args_start);
+    }
+
+    return msg_buff;
 }
 
 const char *str_type (MSG_TYPE type) 

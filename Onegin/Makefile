@@ -1,6 +1,7 @@
 CC      		   = g++
 APP     		   = Onegin
-OPTIONS            = -D\$$DO_LOG_AND_TRACE
+LOG_FILES          = -D \$$LOG_FILE_NAME=\"Onegin.log\"  -D \$$TRACE_FILE_NAME=\"Onegin.trace\" 
+OPTIONS            = -D\$$DO_LOG -D\$$DO_TRACE $(LOG_FILES)
 WARNIGS_AND_ERRORS = -Wall -Wextra -Werror
 FLAGS   		   = $(WARNIGS_AND_ERRORS) -g -O2 -rdynamic -ldl -finstrument-functions $(OPTIONS)
 

@@ -15,4 +15,10 @@ void __cyg_profile_func_exit (void *callee, void *caller);
 WITHOUT_TRACE
 void gcc_trace_msg (const char *msg);
 
+WITHOUT_TRACE
+void gcc_trace_stop_tracing();
+
+WITHOUT_TRACE
+void gcc_trace_start_tracing();
+
 #endif

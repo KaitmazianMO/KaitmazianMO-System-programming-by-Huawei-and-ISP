@@ -26,16 +26,19 @@ TRACE_CODE
     {
         FILE  *file;
         int    indent;
+        bool   do_trace;
     };
 
     WITHOUT_TRACE
     TraceContoller *tracer()
     {
         static TraceContoller trace_controller {
-            .file = fopen ($TRACE_FILE_NAME , "wb"),
-            .indent     = 0
+            .file       = fopen ($TRACE_FILE_NAME , "wb"),
+            .indent     = 0,
+            .do_trace   = true,
         };
         assert (trace_controller.file && "TRACE FILE OPEN FAILED");
+        UNUSED (trace_controller);
         return &trace_controller;
     }
 )
@@ -58,11 +61,14 @@ void __cyg_profile_func_enter (void *callee, void *caller)
     UNUSED (callee);
     UNUSED (caller);
     TRACE_CODE(    
-        CallInfo info = get_info (callee, caller);
-        trace (CALL, info);
-        if (info.func_demangled)
-            delete info.func_name;
-        ++tracer()->indent;
+        if (tracer()->do_trace)
+        {
+            CallInfo info = get_info (callee, caller);
+            trace (CALL, info);
+            if (info.func_demangled)
+                delete info.func_name;
+            ++tracer()->indent;
+        }
     )
 }
 
@@ -71,17 +77,22 @@ void __cyg_profile_func_exit (void *callee, void *caller)
     UNUSED (callee);
     UNUSED (caller);
     TRACE_CODE (
-        --tracer()->indent;
-        CallInfo info = get_info (callee, caller);
-        trace (QUIT, info);
-        if (info.func_demangled)
-            delete info.func_name;
+        if (tracer()->do_trace)
+        {
+            --tracer()->indent;
+            CallInfo info = get_info (callee, caller);
+            trace (QUIT, info);
+            if (info.func_demangled)
+                delete info.func_name;
+        }
     )
 }
 
 WITHOUT_TRACE
 CallInfo get_info (void *callee, void *caller)
 {
+    UNUSED (caller);
+    UNUSED (callee);
     CallInfo call_info = { "unknown", "unknown", false };
     Dl_info info = {};
     if (dladdr (callee, &info)) 
@@ -111,6 +122,8 @@ CallInfo get_info (void *callee, void *caller)
 WITHOUT_TRACE
 void trace (MSG_TYPE type, CallInfo info)
 {
+    UNUSED (type);
+    UNUSED (info);
 TRACE_CODE (
     auto formated_msg = logger_get_formated_msg (type, "%s <%s>", info.func_name, info.file_name);
     save_fprintf (tracer()->file, "%*.s", 4*tracer()->indent, "");
@@ -121,10 +134,24 @@ TRACE_CODE (
 
 void gcc_trace_msg (const char *msg)
 {
+    UNUSED (msg);
 TRACE_CODE (
-    //assert (trace_file && "TRACE FILE WAS NOT OPENED");
     save_fprintf (tracer()->file, "%*.s", 4*tracer()->indent, "");
     save_fprintf (tracer()->file, "%s\n", msg);
     save_fflush (tracer()->file);
+)
+}
+
+void gcc_trace_stop_tracing()
+{
+TRACE_CODE (    
+    tracer()->do_trace = false;
+)
+}
+
+void gcc_trace_start_tracing()
+{
+TRACE_CODE (    
+    tracer()->do_trace = true;
 )
 }

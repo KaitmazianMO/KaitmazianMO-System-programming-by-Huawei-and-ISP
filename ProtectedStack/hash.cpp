@@ -1,21 +1,24 @@
 #include "hash.h"
 #include "../Utilities/Log/log.h"
 
-LOG_WIHTOUT_TRACE
-static char roll (char);
+LOG_WITHOUT_TRACE
+static char roll (char ch, int n);
 
 hash_t compute_hash (const char *mem, size_t mem_size, size_t mod)
 {
-    hash_t hash = (hash_t)-1 % mod;
-    char *phash = (char *)&hash;
+    hash_t hash = 0;
     for (size_t i = 0; i < mem_size; ++i)
-        phash[i%sizeof(hash_t)] ^= roll (mem[i]);
+        hash += roll (mem[i], i);
 
-    LOG_MSG_LOC (LOG, "Computed hash: %zu", hash % mod);
+    LOG_MSG (LOG, "Computed hash: " HASH_FMT, hash % mod);
     return hash % mod;
 }
 
-char roll (char ch)
+char roll (char ch, int n)
 {
-    return (ch << 1) | (ch >> 7);
+    char val = ch;
+    for (int i = 0; i < n % 8; ++i)
+        val = (val << 1) | (val >> 7);
+
+    return val;
 }

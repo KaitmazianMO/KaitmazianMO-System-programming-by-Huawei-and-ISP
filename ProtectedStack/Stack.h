@@ -2,7 +2,6 @@
 #define STACK_H_IONCLUDED
 
 #include <stdlib.h>
-#include "../Utilities/Log/gcc_trace.h"
 #include "ProtectedBuffer.h"
 
 

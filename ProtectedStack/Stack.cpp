@@ -2,6 +2,7 @@
 #include "ProtectedBuffer.h"
 #include "hash.h"
 #include "Canary.h"
+#include "../Utilities/Log/log.h"
 
 #include <assert.h>
 #include <string.h>
@@ -155,7 +156,7 @@ int stack_dtor (Stack *this_)
     return err;   
 }
 
-WITHOUT_TRACE
+LOG_WITHOUT_TRACE
 static void print_indent (FILE *file, int indent) { fprintf (file, "%*.s", indent, ""); }
 
 int stack_dump (const Stack *this_, FILE *file, int indent)
@@ -163,30 +164,28 @@ int stack_dump (const Stack *this_, FILE *file, int indent)
     STACK_VERIFY (this_);
     if (file == NULL) file = stderr;
 
-    START_DUMPING ("Stack dump");
-
     CANARIES_PROTECTION_CODE (
-        print_indent (file, indent); fprintf (file, "\tfront canary     = %lx\n", this_->front_canary);
+        print_indent (file, indent); fprintf (file, "front canary     = %lx\n", this_->front_canary);
     )
-    print_indent (file, indent); fprintf (file,     "\tcurrent top      = %zu\n", this_->curr_pos);
-    print_indent (file, indent); fprintf (file,     "\tcurrent capacity = %zu\n", protected_buff_size (&this_->buff));
+    print_indent (file, indent); fprintf (file,     "current top      = %zu\n", this_->curr_pos);
+    print_indent (file, indent); fprintf (file,     "current capacity = %zu\n", protected_buff_size (&this_->buff));
     HASH_PROTECTION_CODE (
-        print_indent (file, indent); fprintf (file, "\tstack hash       = " HASH_FMT "\n", this_->stack_hash);
-        print_indent (file, indent); fprintf (file, "\tdata hash        = " HASH_FMT "\n", this_->data_hash);
+        print_indent (file, indent); fprintf (file, "stack hash       = " HASH_FMT "\n", this_->stack_hash);
+        print_indent (file, indent); fprintf (file, "data hash        = " HASH_FMT "\n", this_->data_hash);
     )
     CANARIES_PROTECTION_CODE (
-        print_indent (file, indent); fprintf (file, "\tback canary      = %lx\n", this_->back_canary);
+        print_indent (file, indent); fprintf (file, "back canary      = %lx\n", this_->back_canary);
     )
 
     const void *curr_elem_ptr = NULL;
     print_indent (file, indent);
-    fprintf (file, "\t{\n");
+    fprintf (file, "{\n");
     const size_t buff_size = protected_buff_size (&this_->buff);
     for (size_t i = 0; i < buff_size; ++i)
     {
         curr_elem_ptr = protected_buff_get_data (&this_->buff, i);
         print_indent (file, indent);
-        fprintf (file, "\t\t[%zu] = ", i);
+        fprintf (file, "\t[%zu] = ", i);
         if (this_->print_elem) 
             this_->print_elem (file, curr_elem_ptr);
         else 
@@ -194,9 +193,8 @@ int stack_dump (const Stack *this_, FILE *file, int indent)
         fprintf (file, "\n");
     }
     print_indent (file, indent);
-    fprintf (file, "\t}\n");
+    fprintf (file, "}\n");
 
-    FINISH_DUMPING();
     return STACK_OK;
 }
 
@@ -205,10 +203,8 @@ int stack_dump_to_log (const Stack *this_)
     STACK_VERIFY (this_);
 
     START_DUMPING ("Stack dump");
-
-    int err = stack_dump (this_, LOG_INSTANCE()->file, 4*LOG_INSTANCE()->indent);
-
-    FINISH_DUMPING();
+    int err = stack_dump (this_, log_file(), 0);
+    STOP_DUMPING;
 
     return err;
 }
@@ -251,19 +247,19 @@ bool stack_verify (const Stack *this_)
     int state = stack_state (this_);
     CANARIES_PROTECTION_CODE (
     if (state & STK_BAD_FRONT_CANARY)
-        LOG_MSG_LOC (ERROR, "%s %llx(%p)", stack_str_state (STK_BAD_FRONT_CANARY), this_->front_canary, &this_->front_canary);
+        LOG_MSG (ERROR, "%s %llx(%p)", stack_str_state (STK_BAD_FRONT_CANARY), this_->front_canary, &this_->front_canary);
     if (state & STK_BAD_BACK_CANARY)  
-        LOG_MSG_LOC (ERROR, "%s %llx(%p)", stack_str_state (STK_BAD_BACK_CANARY), this_->back_canary, &this_->back_canary);
+        LOG_MSG (ERROR, "%s %llx(%p)", stack_str_state (STK_BAD_BACK_CANARY), this_->back_canary, &this_->back_canary);
     )
     
     if (state & STK_BUFFER_VERIFICATION_FAILED)   
-        LOG_MSG_LOC (ERROR, stack_str_state (STK_BUFFER_VERIFICATION_FAILED));
+        LOG_MSG (ERROR, stack_str_state (STK_BUFFER_VERIFICATION_FAILED));
     
     HASH_PROTECTION_CODE (
         if (state & STK_HASH_MISMATCH) 
-            LOG_MSG_LOC (ERROR, stack_str_state (STK_HASH_MISMATCH));
+            LOG_MSG (ERROR, stack_str_state (STK_HASH_MISMATCH));
         if (state & STK_DATA_HASH_MISMATCH)
-            LOG_MSG_LOC (ERROR, stack_str_state (STK_DATA_HASH_MISMATCH));    
+            LOG_MSG (ERROR, stack_str_state (STK_DATA_HASH_MISMATCH));    
     )
     return state == STACK_OK;
 }

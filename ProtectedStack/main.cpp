@@ -18,17 +18,16 @@ void print_int (FILE *file, const void *pint);
 
 int main()
 {
-
     int data = 5;
     auto *stk_int = stack_ctor (10, sizeof (int));
     
-    if (!stk_int) LOG_MSG_LOC (FATAL, "Stack was not created");
+    if (!stk_int) LOG_MSG (FATAL, "Stack was not created");
 
-    CAST (char *, stk_int)[0] = 0;
+    //CAST (char *, stk_int)[0] = 0;
 
     if (!stack_verify (stk_int))
     {
-        printf ("ver failed");
+        LOG_MSG (FATAL, "ver failed");
         exit (2);
     }
 

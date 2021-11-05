@@ -1,7 +1,8 @@
 CC      		  = g++
 APP     		  = ProtectedStack
 IGNORING_WARNIGNS = -Wno-unused-value
-OPTIONS 		  = -D\$$CANARIES_PROTECTION -D\$$MEMORY_CLEAN_UPS -D\$$STRUCT_VERIFICATION -D\$$HASH_PROTECTION -D\$$DO_LOG_AND_TRACE
+LOG_FILES         = -D \$$LOG_FILE_NAME=\"ProtectedStack.log\"  -D \$$TRACE_FILE_NAME=\"ProtectedStack.trace\" 
+OPTIONS 		  = -D\$$CANARIES_PROTECTION -D\$$MEMORY_CLEAN_UPS -D\$$STRUCT_VERIFICATION -D\$$HASH_PROTECTION -D\$$DO_LOG -D\$$DO_TRACE $(LOG_FILES)
 FLAGS   		  = -Wall -g -O2 -rdynamic -ldl -finstrument-functions $(OPTIONS) $(IGNORING_WARNIGNS)
 
 all: Stack.o ProtectedBuffer.o Memory.o hash.o Canary.o stdlib_addition.o log.o gcc_trace.o 

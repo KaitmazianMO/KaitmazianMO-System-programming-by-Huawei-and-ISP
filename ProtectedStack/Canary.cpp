@@ -3,7 +3,7 @@
 
 void set_canary (canary_t *pcanary)
 {
-    LOG_MSG_LOC (LOG, "Setting canary at %p", pcanary);
+    LOG_MSG (LOG, "Setting canary at %p", pcanary);
     if (pcanary) *pcanary = (canary_t)pcanary;
 }
 

@@ -150,16 +150,16 @@ bool protected_buff_verify (const ProtectedBuffer *this_)
     auto state = protected_buff_state (this_);
     {
         if (state & PBUFF_BAD_MEMORY)            
-            LOG_MSG_LOC (ERROR, protected_buff_str_error (PBUFF_BAD_MEMORY));
+            LOG_MSG (ERROR, protected_buff_str_error (PBUFF_BAD_MEMORY));
         if (state & PBUFF_BAD_ELEM_SIZE)         
-            LOG_MSG_LOC (ERROR, protected_buff_str_error (PBUFF_BAD_ELEM_SIZE)); 
+            LOG_MSG (ERROR, protected_buff_str_error (PBUFF_BAD_ELEM_SIZE)); 
         CANARIES_PROTECION_CODE (
             if (state & PBUFF_BAD_DATA_FRONT_CANARY) 
-                LOG_MSG_LOC (ERROR, "%s %llx(%p)", protected_buff_str_error (PBUFF_BAD_DATA_FRONT_CANARY),
-                                                  *get_front_canary (this_), get_front_canary (this_));
+                LOG_MSG (ERROR, "%s %llx(%p)", protected_buff_str_error (PBUFF_BAD_DATA_FRONT_CANARY),
+                                              *get_front_canary (this_), get_front_canary (this_));
             if (state & PBUFF_BAD_DATA_BACK_CANARY)  
-                LOG_MSG_LOC (ERROR, "%s %llx(%p)", protected_buff_str_error (PBUFF_BAD_DATA_BACK_CANARY), 
-                                                  *get_back_canary (this_), get_back_canary (this_));   
+                LOG_MSG (ERROR, "%s %llx(%p)", protected_buff_str_error (PBUFF_BAD_DATA_BACK_CANARY), 
+                                              *get_back_canary (this_), get_back_canary (this_));   
         )
     }
 

@@ -1,12 +1,20 @@
 #include "ListLib/list.h"
+#include <stdio.h>
 
 void list_dump (List *list) {
 
     ref_t curr_ref = list->head_ref;
     for (int i = 0; i < list->size; ++i) {
-        printf ("%lg -> ", list->pool[curr_ref]);
-        curr_ref = list->next[curr_ref];
+        printf ("%lg -> ", list->nodes[curr_ref].val);
+        curr_ref = list->nodes[curr_ref].next;
+    } putchar ('\n');
+
+    curr_ref = list->head_ref;
+    for (int i = 0; i < list->size; ++i) {
+        printf ("[%d]:<%12zu, %12lg, %12zu>\n", i, list->nodes[curr_ref].prev, list->nodes[curr_ref].val, list->nodes[curr_ref].next);
+        curr_ref = list->nodes[curr_ref].next;
     }
+
     putchar ('\n');
 }
 
@@ -23,8 +31,13 @@ int main() {
 
     list_insert_front (plist, 4);
     auto ins = list_insert_front (plist, 1);
+    list_dump (plist);
 
-    auto er = list_insert_after (plist, list_insert_after (plist, ins, 2), 3);
+    auto er = list_insert_after (plist, ins, 2);
+    if (er == List::BAD_REF) printf ("BADREF1\n");
+    list_dump (plist);
+    er = list_insert_after (plist, er, 3);
+    if (er == List::BAD_REF) printf ("BADREF2\n");
     //list_insert_back (plist, val_t(-1));
     //list_insert_back (plist, val_t(-2));
     //list_insert_back (plist, val_t(-3));
@@ -36,11 +49,11 @@ int main() {
     //}
     //list_dump (plist);
 
-    if (list_erase (plist, ins) == LIST_BAD_REF) {
-        printf ("erase failed");
-    }
-    list_dump (plist);    
-
-    list_free (plist);
+    //if (list_erase (plist, ins) == LIST_BAD_REF) {
+    //    printf ("erase failed");
+    //}
+    //list_dump (plist);    
+//
+    //list_free (plist);
     return 0;
 }

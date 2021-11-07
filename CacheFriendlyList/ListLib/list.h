@@ -2,30 +2,35 @@
 #define LIST_H_INCLUDED
 
 #include <stddef.h>
-#include <bitset>
 
 typedef double val_t;
 typedef size_t ref_t;
 
-constexpr ref_t LIST_POOL_SIZE = 1024u;
-constexpr ref_t LIST_BAD_REF = (ref_t)-1;
-
 struct List {
-    ref_t head_ref;
-    /* the keys are located in an array to reduce the number of cache misses when iterating over the list */
-    val_t pool[LIST_POOL_SIZE];
-    /* next[i] - next element after pool[i] 
-       or if next[i] == i, pool[i] is free */
-    ref_t next[LIST_POOL_SIZE];
+   struct Node {
+      val_t val;
+      ref_t next;
+      ref_t prev;
+   };
+
+   static constexpr ref_t DEFAULT_CAPACITY = 32u;
+   static constexpr ref_t BAD_REF = (ref_t)-1;   
     
-    size_t size;
+   Node *nodes;
+   ref_t head_ref;
+   ref_t tail_ref;
+   ref_t free_head_ref;
+    
+   ref_t size;
+   ref_t cap;
 };
 
-int   list_init (List *this_);
+int   list_init (List *this_, ref_t cap = List::DEFAULT_CAPACITY);
 int   list_free (List *this_);
 
 val_t list_get (List *this_, ref_t ref);
 
+bool  is_valid_ref (List *this_, ref_t ref);
 ref_t list_insert_front (List *this_, val_t val);
 ref_t list_insert_after (List *this_, ref_t ref, val_t val);
 ref_t list_erase (List *this_, ref_t ref);

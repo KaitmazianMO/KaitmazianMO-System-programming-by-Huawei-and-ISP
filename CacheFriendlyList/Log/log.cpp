@@ -1,6 +1,7 @@
 #include "log.h"
 #include <assert.h>
 #include <stdarg.h>
+#include <string.h>
 
 struct Logger {
     FILE *stream;
@@ -39,16 +40,16 @@ char *log_format_msg (LogType type, Location loc, const char *fmt, ...) {
     const unsigned int buff_sz = 1024u;
     static char buff[buff_sz + 1]= {};
 
-    if (logger.log_lvl >= type) {
+    if (logger.log_lvl <= type) {
         unsigned int off = 0;
-        off += snprintf (buff, buff_sz - off, "[%7s] ", str (type));
+        off += snprintf (buff + off, buff_sz - off, "[%-s] ", str (type));
 
         va_list start = {};
         va_start(start, fmt);
-        off += vsnprintf (buff, buff_sz - off, fmt, start);
+        off += vsnprintf (buff + off, buff_sz - off, fmt, start);
         va_end (start);
 
-        off += snprintf (buff, buff_sz - off, "<%s:%s:%d>", loc.file, loc.func, loc.nline);        
+        off += snprintf (buff + off, buff_sz - off, " (%s:%s:%d)", loc.file, loc.func, loc.nline);        
     } else {
         buff[0] = '\0';
     }
@@ -58,11 +59,11 @@ char *log_format_msg (LogType type, Location loc, const char *fmt, ...) {
 
 static const char *str (LogType type) {
     switch (type)
-    {
-        case INFO:    return "INFO";
-        case WARNING: return "WARNING";
-        case ERROR:   return "ERROR";
-        case FATAL:   return "FATAL";
+    {// <font color="цвет">...</font>
+        case INFO:    return "<font color=\"grey\">INFO   </font>";
+        case WARNING: return "<font color=\"#F6BE00\">WARNING</font>";
+        case ERROR:   return "<font color=\"red\">ERROR  </font>";
+        case FATAL:   return "<font color=\"purple\">FATAL  </font>";
     }
     return "INFO";
 }

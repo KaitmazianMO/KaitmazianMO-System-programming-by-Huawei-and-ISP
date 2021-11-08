@@ -14,8 +14,8 @@ enum LogType {
     #define LOG_MSG( type , ...)    \
         do {    \
             const char *msg = log_format_msg (type,     \
-                {.file = __FILE__, .func = __FUNCTION__, .line = __LINE__}, __VA_ARGS__);   \
-            log_msg (msg);
+                Location{.file = __FILE__, .func = __FUNCTION__, .nline = __LINE__}, __VA_ARGS__);   \
+            log_msg (msg);  \
         } while (0)
 
     #define LOG_IMAGE( img_path )   \
@@ -25,7 +25,7 @@ enum LogType {
 
 #else 
     #define LOG_MSG( type, ... )   ; 
-    #define LOG_IMAGE (img_path)   ;
+    #define LOG_IMAGE( img_path )   ;
 #endif 
 
 struct Location {

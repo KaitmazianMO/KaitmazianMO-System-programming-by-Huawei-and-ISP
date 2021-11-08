@@ -1,4 +1,5 @@
 #include "ListLib/list.h"
+#include "Log/log.h"
 #include <stdio.h>
 
 void list_dump (List *list) {
@@ -19,6 +20,18 @@ void list_dump (List *list) {
 }
 
 int main() {
+    log_init ("lsit.html");
+
+    LOG_MSG (INFO, "test message");
+    LOG_MSG (WARNING, "There is a cat!");
+
+    LOG_IMAGE ("cat.jpg");
+
+    LOG_MSG (INFO, "312321 3213 21312");
+    LOG_MSG (WARNING, "321 124  12421!");
+    LOG_MSG (FATAL, "fsDL:JRF;AEUKFhnwaeFDNJlwa!");
+    
+
     List list{};
     auto plist = &list;
     list_init (plist);

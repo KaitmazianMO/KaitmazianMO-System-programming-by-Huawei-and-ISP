@@ -1,4 +1,5 @@
 #include "ListLib/list.h"
+#include "Log/graphviz.h"
 #include "Log/log.h"
 #include <stdio.h>
 
@@ -30,7 +31,20 @@ int main() {
     LOG_MSG (INFO, "312321 3213 21312");
     LOG_MSG (WARNING, "321 124  12421!");
     LOG_MSG (FATAL, "fsDL:JRF;AEUKFhnwaeFDNJlwa!");
+
+    gv_Grapg graph = {};
+    gv_graph_init (&graph);
     
+    gv_graph_add_vertex (&graph, 1, gv_reclangle, "first");
+    gv_graph_add_vertex (&graph, 2, gv_reclangle, "second");
+    gv_graph_add_vertex (&graph, 3, gv_reclangle, "third");
+    gv_graph_add_edje (&graph, 1, 2, "wheee");
+    gv_graph_add_edje (&graph, 1, 3, "WHOA");
+
+    if (gv_graph_create_image (&graph, "graph.pdf", gv_PDF)) {
+        printf ("Image creating failed");
+    }
+    gv_graph_free (&graph);
 
     List list{};
     auto plist = &list;

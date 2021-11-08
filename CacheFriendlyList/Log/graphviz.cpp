@@ -18,6 +18,9 @@ int gv_graph_init (gv_Grapg *graph) {
         return 0;
     }
 
+    fprintf (graph->dot_file, "digraph G{\n");
+    graph->finished = false;
+
     return 1;
 }
 
@@ -26,6 +29,8 @@ int gv_graph_free (gv_Grapg *graph) {
     assert (graph->dot_file);
 
     fclose (graph->dot_file);
+    graph->dot_file = NULL;
+    remove (graph->tmp_dot_name);
 
     return 1;
 }
@@ -59,16 +64,21 @@ void gv_graph_add_edje (gv_Grapg *graph, size_t from, size_t to, const char *lab
     fprintf (graph->dot_file, "\"]\n");
 }
 
-int gv_create_graph_image (gv_Grapg *graph, const char *path, gv_ImageFormat format) {
+int gv_graph_create_image (gv_Grapg *graph, const char *path, gv_ImageFormat format) {
     assert (graph);
     assert (path);
     assert (graph->dot_file);
     assert (graph->tmp_dot_name);
     
+    if (!graph->finished) {
+        fprintf (graph->dot_file, "}");
+        graph->finished = true;
+        fflush (graph->dot_file);
+    }
+
     const int sz = 1024;
     static char buff[sz + 1] = {};
 
-    fflush (graph->dot_file);
     snprintf (buff, sz, "dot -T%s %s -o %s", str (format), graph->tmp_dot_name, path);
     return system (buff);
 }

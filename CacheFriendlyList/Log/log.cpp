@@ -13,6 +13,7 @@ static const char *str (LogType);
 
 void log_init (const char *log_file_name, LogType log_lvl) {
     logger = { .stream = fopen (log_file_name, "w"), .log_lvl = log_lvl };
+    logger.stream && fprintf (logger.stream, "<pre>\n");
 }
 
 inline Logger *save_logger() {

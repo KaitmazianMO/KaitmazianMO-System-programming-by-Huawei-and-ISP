@@ -22,6 +22,7 @@ enum gv_ImageFormat {
 };
 
 int  gv_graph_init (gv_Grapg *graph);
+int  gb_graph_free (gv_Grapg *graph);
 void gv_graph_add_vertex (gv_Grapg *graph, size_t handle, gv_Shape shape, const char *label, ...);
 void gv_graph_add_edje (gv_Grapg *graph, size_t from, size_t to, const char *label, ...);
 int  gv_create_graph_image (gv_Grapg *graph, const char *path, gv_ImageFormat format = gv_PNG);

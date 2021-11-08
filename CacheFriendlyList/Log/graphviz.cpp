@@ -4,6 +4,7 @@
 #include <stdarg.h>
 
 const char *str (gv_Shape shape);
+const char *str (gv_ImageFormat);
 
 int gv_graph_init (gv_Grapg *graph) {
     assert (graph);
@@ -20,6 +21,15 @@ int gv_graph_init (gv_Grapg *graph) {
     return 1;
 }
 
+int gv_graph_free (gv_Grapg *graph) {
+    assert (graph);
+    assert (graph->dot_file);
+
+    fclose (graph->dot_file);
+
+    return 1;
+}
+
 void gv_graph_add_vertex (gv_Grapg *graph, size_t handle, gv_Shape shape, const char *label, ...) {
     assert (graph);
     assert (label);
@@ -30,16 +40,37 @@ void gv_graph_add_vertex (gv_Grapg *graph, size_t handle, gv_Shape shape, const 
     fprintf (graph->dot_file, "label = \"");
     va_list list = {};
     va_start (list, label);
-    vfprintf (graph->dot_file, )
-
+    vfprintf (graph->dot_file, label, list);
+    va_end (list);
+    fprintf (graph->dot_file, "\"]\n");
 }
 
 void gv_graph_add_edje (gv_Grapg *graph, size_t from, size_t to, const char *label, ...) {
+    assert (graph);
+    assert (label);
+    assert (graph->dot_file);
 
+    fprintf (graph->dot_file, "\t%zu -> %zu", from, to);
+    fprintf (graph->dot_file, "[label = \"");
+    va_list list = {};
+    va_start (list, label);
+    vfprintf (graph->dot_file, label, list);
+    va_end (list);
+    fprintf (graph->dot_file, "\"]\n");
 }
 
 int gv_create_graph_image (gv_Grapg *graph, const char *path, gv_ImageFormat format) {
+    assert (graph);
+    assert (path);
+    assert (graph->dot_file);
+    assert (graph->tmp_dot_name);
+    
+    const int sz = 1024;
+    static char buff[sz + 1] = {};
 
+    fflush (graph->dot_file);
+    snprintf (buff, sz, "dot -T%s %s -o %s", str (format), graph->tmp_dot_name, path);
+    return system (buff);
 }
 
 const char *str (gv_Shape shape) {
@@ -49,4 +80,12 @@ const char *str (gv_Shape shape) {
         case gv_record:     return "record";
     }
     return "";
+}
+
+const char *str (gv_ImageFormat format) {
+    switch (format) {
+        case gv_PNG: return "png";
+        case gv_PDF: return "pdf";
+    }
+    return "png";
 }

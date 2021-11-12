@@ -49,7 +49,7 @@ char *log_format_msg (LogType type, Location loc, const char *fmt, ...) {
         off += vsnprintf (buff + off, buff_sz - off, fmt, start);
         va_end (start);
 
-        off += snprintf (buff + off, buff_sz - off, " (%s:%s:%d)", loc.file, loc.func, loc.nline);        
+        off += snprintf (buff + off, buff_sz - off, " <font color=\"grey\">(%s:%s:%d)</font>", loc.file, loc.func, loc.nline);        
     } else {
         buff[0] = '\0';
     }
@@ -60,7 +60,7 @@ char *log_format_msg (LogType type, Location loc, const char *fmt, ...) {
 static const char *str (LogType type) {
     switch (type)
     {// <font color="цвет">...</font>
-        case INFO:    return "<font color=\"grey\">INFO   </font>";
+        case INFO:    return "<font color=\"blue\">INFO   </font>";
         case WARNING: return "<font color=\"#F6BE00\">WARNING</font>";
         case ERROR:   return "<font color=\"red\">ERROR  </font>";
         case FATAL:   return "<font color=\"purple\">FATAL  </font>";

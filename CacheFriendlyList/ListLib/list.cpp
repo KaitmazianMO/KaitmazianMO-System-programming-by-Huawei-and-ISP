@@ -35,14 +35,14 @@ int list_init (List *list, ref_t cap) {
     assert (list);
     list->size = 0;
     list->cap = cap;
+    list->head_ref = List::BAD_REF;
+    list->tail_ref = List::BAD_REF;    
     list->nodes = (List::Node *)calloc (cap, sizeof (list->nodes[0]));
     if (!list->nodes) {
         return 0;
     }
 
     list->free_head_ref = 0;
-    list->head_ref = list->free_head_ref;
-    list->tail_ref = list->free_head_ref;
     for (int i = 0; i < list->cap; ++i) {
         list->nodes[i].prev = i;  // mark free vals
         list->nodes[i].next = i + 1;  // tie free list
@@ -69,6 +69,10 @@ ref_t list_insert_front (List *list, val_t val) {
             PREV (list, HEAD (list)) = new_front_ref;
         }
         HEAD (list) = new_front_ref;
+
+        if (TAIL (list) == List::BAD_REF) {
+            TAIL (list) = HEAD (list);
+        }
     }
     return new_front_ref;
 }

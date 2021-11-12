@@ -104,22 +104,21 @@ int asm_translate (Assembler *assm) {
     return 1;
 }
 
-reg_t to_register (StringView sv) {
+arg_t to_register (StringView sv) {
     char *nend = NULL;
     errno = 0;
-    reg_t num = (reg_t)strtol (beg (sv) + 1, &nend, 10);
-    if (instr_to_reg (num) > G_INSTR_N_REGISTERS || errno == ERANGE || num < 0) {
+    arg_t num = (arg_t)strtol (beg (sv) + 1, &nend, 10);
+    arg_t regn = instr_to_R (num);
+    if (regn == G_INSTR_ARG_INVALID || errno == ERANGE || num < 0) {
         error ("Wrong register number " REGREF_F ", "
-               "there is only %zu awailable registers", num, G_INSTR_REG_T_MAX);
-        return -1;
+               "there is only %zu awailable registers", num, G_INSTR_N_REGISTERS);
     }
 
     if (sv.beg_ + sv.size_ != nend) { 
         error ("Extra cahracters at et the end of register \'%.*s\'", (int)sv.size_, sv.beg_);
-        return -1;
     }
 
-    return instr_to_reg (num);
+    return regn;
 }
 
 Object make_object (Token tok) {
@@ -137,13 +136,6 @@ Object make_object (Token tok) {
     return obj;
 }
 
-#define EXPECT( tag_expect, opcode )    \
-    if (type (tok) != tag_expect) { \
-        error ("Expected " #tag_expect " after the command %s at line %zu", \
-         instr_to_str (opcode), LEXLINE);   \
-         return 0;  \
-    }   \
-  
 #define EXPECT3( tag_expect1, tag_expect2, tag_expect3, opcode )    \
     if (type (tok) != tag_expect1 && type (tok) != tag_expect2 && type (tok) != tag_expect3) { \
         error ("Expected %s, %s or %s"  \
@@ -185,19 +177,26 @@ Object make_object (Token tok) {
     }   \
 
 int handle_arithmetic (Assembler *assm, Opcode ar_code) {
-    auto tok = lex_get_tok (pLEX);
-    reg_t R{};
-    regref_t A{};
-    regref_t B{};
+    arg_t R{};
+    arg_t A{};
+    arg_t B{};
 
-    EXPECT (IDENTIFIER, ar_code);
-    HANDLE_AS_REGISTER (R);
+    auto tokR = lex_get_tok (pLEX);
+    if (type (tokR) != IDENTIFIER) {
+        error ("Expected register identtifyer after the command %s at line %zu", 
+            instr_to_str (ar_code), LEXLINE); 
+        return 0;  
+    }   
+    R = to_register (tokR.name);
+    if (R == G_INSTR_ARG_INVALID) {
+        return 0;
+    }
 
-    tok = lex_get_tok (pLEX);
+    auto tokA = lex_get_tok (pLEX);
+    auto tokB = lex_get_tok (pLEX);
     EXPECT3 (IDENTIFIER, DEC_NUMBER, INT_NUMBER, ar_code);
     HANDLE_AB (A);
 
-    tok = lex_get_tok (pLEX);
     EXPECT3 (IDENTIFIER, DEC_NUMBER, INT_NUMBER, ar_code);    
     HANDLE_AB (B);
 

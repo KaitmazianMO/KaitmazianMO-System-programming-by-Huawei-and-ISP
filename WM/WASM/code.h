@@ -15,8 +15,8 @@ int code_free (Code *code);
 inline Code code_destroyable() { return Code{ .instr_ = NULL, .size_ = 0 }; }
 
 /* R - register | A,B - register of reference | C - reference */
-int code_write_RAB (Code *code, Opcode opcode, reg_t R, regref_t A, regref_t B);
-int code_write_A (Code *code, Opcode opcode, regref_t A);
-int code_wtite_C (Code *code, Opcode opcode, ref_t C);
+int code_write_RAB (Code *code, Opcode opcode, arg_t R, arg_t A, arg_t B);
+int code_wtite_RC (Code *code, Opcode opcode, arg_t R, arg_t C);
+int code_write_D (Code *code, Opcode opcode, arg_t D);
 
 #endif // CODE_H_INCLUDED

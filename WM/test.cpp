@@ -30,26 +30,6 @@ Instruction RAB (Opcode opcode, reg_t R, regref_t A, regref_t B) {
     return instr;
 }
 
-struct cmd_RAB {
-    unsigned opcode : 6;
-    unsigned R : 6;
-    unsigned A : 10;
-    unsigned B : 10; 
-};
-
-struct cmd_RC {
-    unsigned opcode : 6;
-    unsigned R : 6;
-    unsigned C : 20;
-};
-
-struct cmd {
-    union {
-        cmd_RAB RAB;
-        cmd_RC  RC;
-    };
-};
-
 int main() {   
 
     //print (G_INSTR_NBITS);

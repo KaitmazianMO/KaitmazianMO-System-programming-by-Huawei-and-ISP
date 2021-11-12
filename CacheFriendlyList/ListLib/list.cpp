@@ -43,7 +43,7 @@ int list_init (List *list, ref_t cap) {
     }
 
     list->free_head_ref = 0;
-    for (int i = 0; i < list->cap; ++i) {
+    for (size_t i = 0; i < list->cap; ++i) {
         list->nodes[i].prev = i;  // mark free vals
         list->nodes[i].next = i + 1;  // tie free list
     }

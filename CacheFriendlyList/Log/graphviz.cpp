@@ -64,6 +64,19 @@ void gv_graph_add_edje (gv_Graph *graph, size_t from, size_t to, const char *lab
     fprintf (graph->dot_file, "\"]\n");
 }
 
+void gv_graph_add_rank (gv_Graph *graph, ...) {
+    assert (graph);
+    assert (graph->dot_file);
+    
+    va_list args;
+    va_start (args, graph);
+    fprintf (graph->dot_file, "{ rank = same; ");
+    for (size_t handler = va_arg (args, size_t); handler != GV_LAST_HANDLER; handler = va_arg (args, size_t)) {
+        fprintf (graph->dot_file, "%zu; ", handler);
+    }
+    fprintf (graph->dot_file, "}\n");
+}
+
 int gv_graph_create_image (gv_Graph *graph, const char *path, gv_ImageFormat format) {
     assert (graph);
     assert (path);

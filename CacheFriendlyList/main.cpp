@@ -2,18 +2,19 @@
 #include "Log/graphviz.h"
 #include "Log/log.h"
 #include <stdio.h>
+#include <assert.h>
 
 void list_dump (const List *list) {
 
     ref_t curr_ref = list->head_ref;
-    for (int i = 0; i < list->size; ++i) {
+    for (size_t i = 0; i < list->size; ++i) {
         printf ("%lg -> ", list->nodes[curr_ref].val);
         curr_ref = list->nodes[curr_ref].next;
     } putchar ('\n');
 
     curr_ref = list->head_ref;
-    for (int i = 0; i < list->size; ++i) {
-        printf ("[%d]:<%12zu, %12lg, %12zu>\n", i, list->nodes[curr_ref].prev, list->nodes[curr_ref].val, list->nodes[curr_ref].next);
+    for (size_t i = 0; i < list->size; ++i) {
+        printf ("[%zu]:<%12zu, %12lg, %12zu>\n", i, list->nodes[curr_ref].prev, list->nodes[curr_ref].val, list->nodes[curr_ref].next);
         curr_ref = list->nodes[curr_ref].next;
     }
 
@@ -21,15 +22,22 @@ void list_dump (const List *list) {
 }
 
 gv_Graph list_to_gv_graph (const List *list) {
+    assert (list);
+    
     gv_Graph graph = {};
     ref_t prev = 0;
     ref_t next = 0;
+
     if (gv_graph_init (&graph)) {
+        for (size_t i = 0, cap = list->cap; i < cap; ++i) {
+            gv_graph_add_rank (&graph, i, GV_LAST_HANDLER);
+        }
+
         for (size_t i = 0, cap = list->cap; i < cap; ++i) {
             prev = list->nodes[i].prev;
             next = list->nodes[i].next;
             if (i != List::BAD_REF && prev != List::BAD_REF) {
-                gv_graph_add_edje (&graph, prev, i, "");
+                gv_graph_add_edje (&graph, i, prev, "");
             }
             if (i != List::BAD_REF && next != List::BAD_REF) {
                 gv_graph_add_edje (&graph, i, next, "");
@@ -83,14 +91,8 @@ int main() {
 
     list_insert_front (plist, 4);
 
-    auto graph2 = list_to_gv_graph (&list);
-    gv_graph_create_image (&graph2, "list0.png", gv_PNG);
-
     auto ins = list_insert_front (plist, 1);
     list_dump (plist);
-
-    auto graph = list_to_gv_graph (&list);
-    gv_graph_create_image (&graph, "list1.png", gv_PNG);
 
     auto er = list_insert_after (plist, ins, 2);
     if (er == List::BAD_REF) printf ("BADREF1\n");
@@ -103,8 +105,11 @@ int main() {
 
     list_dump (plist);
     
-    graph = list_to_gv_graph (&list);
+    auto graph = list_to_gv_graph (&list);
     gv_graph_create_image (&graph, "list2.png", gv_PNG);
+
+    LOG_MSG (INFO, "list dump");
+    LOG_IMAGE ("list2.png");
 
     printf ("tail = %zu\n", list.tail_ref);
 
@@ -119,5 +124,10 @@ int main() {
     //list_dump (plist);    
 //
     //list_free (plist);
+
+
+
+    gv_graph_free (&graph);
+
     return 0;
 }

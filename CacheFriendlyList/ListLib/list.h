@@ -6,8 +6,8 @@
 typedef double val_t;
 typedef size_t ref_t;
 
-struct List {
-   struct Node {
+struct List { 
+      struct Node {
       val_t val;
       ref_t next;
       ref_t prev;
@@ -27,12 +27,17 @@ struct List {
 
 int   list_init (List *this_, ref_t cap = List::DEFAULT_CAPACITY);
 int   list_free (List *this_);
-
 val_t list_get (List *this_, ref_t ref);
 
-bool  is_valid_ref (List *this_, ref_t ref);
+ref_t list_head (List *this_);
+ref_t list_tail (List *this_);
+ref_t list_next (List *this_, ref_t ref);
+ref_t list_prev (List *this_, ref_t ref);
 ref_t list_insert_front (List *this_, val_t val);
+ref_t list_insert_back (List *this_, val_t val);
 ref_t list_insert_after (List *this_, ref_t ref, val_t val);
+ref_t list_insert_before (List *this_, ref_t ref, val_t val);
 ref_t list_erase (List *this_, ref_t ref);
+bool  is_valid_ref (List *this_, ref_t ref);
 
 #endif

@@ -7,6 +7,38 @@
 #define HEAD( list )        (list->head_ref)
 #define TAIL( list )        (list->tail_ref)
 
+
+ref_t list_head (List *list) {
+    assert (list);
+
+    return HEAD (list);
+}
+
+ref_t list_tail (List *list) {
+    assert (list);
+
+    return TAIL (list);
+}
+
+ref_t list_next (List *list, ref_t ref) {
+    assert (list);
+
+    if (is_valid_ref (list, ref)) {
+        return NEXT (list, ref);
+    }
+    return List::BAD_REF;
+}
+
+ref_t list_prev (List *list, ref_t ref) {
+    assert (list);
+
+    if (is_valid_ref (list, ref)) {
+        return PREV (list, ref);
+    }
+    return List::BAD_REF;
+}
+
+
 ref_t list_allocate_val (List *list, val_t val) {
     auto ref = list->free_head_ref;
     if (ref != List::BAD_REF) {
@@ -73,6 +105,24 @@ ref_t list_insert_front (List *list, val_t val) {
         if (TAIL (list) == List::BAD_REF) {
             TAIL (list) = HEAD (list);
         }
+    }
+    return new_front_ref;
+}
+
+ref_t list_insert_back (List *list, val_t val) {
+    assert (list);
+
+    auto new_front_ref = list_allocate_val (list, val);
+
+    if (HEAD (list) == List::BAD_REF || TAIL (list) == List::BAD_REF) {
+        HEAD (list) = TAIL (list) = new_front_ref;
+        return TAIL (list);            
+    }
+
+    if (new_front_ref != List::BAD_REF) {
+        NEXT (list, TAIL (list)) = new_front_ref;
+        PREV (list, new_front_ref) = TAIL (list); 
+        TAIL (list) = new_front_ref;
     }
     return new_front_ref;
 }

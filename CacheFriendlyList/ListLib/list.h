@@ -2,6 +2,7 @@
 #define LIST_H_INCLUDED
 
 #include <stddef.h>
+#include <initializer_list>
 
 typedef double val_t;
 typedef size_t ref_t;
@@ -18,7 +19,8 @@ public:
     static constexpr ref_t BAD_REF = (ref_t)-1;   
     
 public:
-    explicit List (ref_t cap = List::DEFAULT_CAPACITY);   
+    explicit List (ref_t cap = List::DEFAULT_CAPACITY);
+    explicit List (const std::initializer_list<val_t> &init_list);  
    ~List();
     ref_t head() const;
     ref_t tail() const;

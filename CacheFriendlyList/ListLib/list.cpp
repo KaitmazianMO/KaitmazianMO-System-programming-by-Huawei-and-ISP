@@ -75,22 +75,31 @@ ref_t List::erase (ref_t ref) {
     --m_size;
     return ref;
 }
-
+#include <stdio.h>
 List::List (ref_t cap) {
-    m_capacity = cap ? cap : DEFAULT_CAPACITY;
+    m_capacity = (cap < 16) ? DEFAULT_CAPACITY : cap + 1; // for ghost elem
+    printf ("m_capacity = %zu\n", m_capacity);
     m_nodes = new List::Node[m_capacity];
     m_size = 0;
     m_free_head_ref = 0;
-    for (size_t i = 0; i < cap; ++i) {
+    for (size_t i = 0; i < m_capacity; ++i) {
         m_nodes[i].prev = i;  // mark free vals
         m_nodes[i].next = i + 1;  // tie free list
     }
-    m_nodes[cap - 1].next = List::BAD_REF;
+    m_nodes[m_capacity - 1].next = List::BAD_REF;
 
     m_ghost = allocate_val ({});
     if (ghost() != BAD_REF) {
         --m_size; 
         m_nodes[ghost()].next = m_nodes[ghost()].prev = ghost();
+    }
+}
+
+List::List (const std::initializer_list<val_t> &init_list) :
+    List (init_list.size()) { 
+    for (const auto &i : init_list) {
+        insert_back (i);
+        printf ("%lg ", i);
     }
 }
 

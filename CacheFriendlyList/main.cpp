@@ -44,6 +44,11 @@ void list_dump (const List &list) {
 //}
 
 int main() {
+
+    printf ("init list test:");
+    List init_list_test ({1, 2, 3, 4, 5, 6, 7, 8, 9});
+    list_dump (init_list_test); 
+
     //log_init ("lsit.html");
 //
     //LOG_MSG (INFO, "test message");

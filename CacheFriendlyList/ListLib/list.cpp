@@ -76,11 +76,11 @@ ref_t List::erase (ref_t ref) {
     return ref;
 }
 
-List::List (ref_t cap) :
-    m_nodes (new List::Node[cap]),
-    m_head_ref (List::BAD_REF), m_tail_ref (List::BAD_REF),
-    m_size (0), m_capacity (cap) {
-
+List::List (ref_t cap) {
+    m_capacity = cap ? cap : DEFAULT_CAPACITY;
+    m_nodes = new List::Node[m_capacity];
+    m_size = 0;
+    m_tail_ref = m_head_ref = BAD_REF;
     m_free_head_ref = 0;
     for (size_t i = 0; i < cap; ++i) {
         m_nodes[i].prev = i;  // mark free vals

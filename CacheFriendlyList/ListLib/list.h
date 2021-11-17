@@ -38,12 +38,14 @@ public:
 
 private:
     Node *m_nodes;
-    ref_t m_head_ref;
-    ref_t m_tail_ref;
+    ref_t m_ghost;  // Ref to ghost element for loop the list. Next is head and prev is tail;  
     ref_t m_free_head_ref;
     ref_t m_size;
     ref_t m_capacity;
 
+    ref_t ghost() const;
+    void set_head (ref_t ref);
+    void set_tail (ref_t ref);
     ref_t free_head() const;
     void  shift_free_head();
     ref_t allocate_val (val_t val);

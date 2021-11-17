@@ -4,11 +4,11 @@
 #include <string.h>
 
 ref_t List::head() const {
-    return m_head_ref;
+    return m_nodes[ghost()].next;
 }
 
 ref_t List::tail() const {
-    return m_tail_ref;
+    return m_nodes[ghost()].prev;
 }
 
 ref_t List::next (ref_t ref) const {
@@ -20,7 +20,7 @@ ref_t List::next (ref_t ref) const {
 
 ref_t List::prev (ref_t ref) const {
     if (is_valid_ref (ref)) {
-        return m_nodes[ref].next;
+        return m_nodes[ref].prev;
     }
     return List::BAD_REF;
 }
@@ -80,13 +80,18 @@ List::List (ref_t cap) {
     m_capacity = cap ? cap : DEFAULT_CAPACITY;
     m_nodes = new List::Node[m_capacity];
     m_size = 0;
-    m_tail_ref = m_head_ref = BAD_REF;
     m_free_head_ref = 0;
     for (size_t i = 0; i < cap; ++i) {
         m_nodes[i].prev = i;  // mark free vals
         m_nodes[i].next = i + 1;  // tie free list
     }
     m_nodes[cap - 1].next = List::BAD_REF;
+
+    m_ghost = allocate_val ({});
+    if (ghost() != BAD_REF) {
+        --m_size; 
+        m_nodes[ghost()].next = m_nodes[ghost()].prev = ghost();
+    }
 }
 
 List::~List() {
@@ -98,35 +103,11 @@ List::~List() {
 }
 
 ref_t List::insert_front (val_t val) {
-    auto new_front_ref = allocate_val (val);
-    if (new_front_ref != List::BAD_REF) {
-        m_nodes[new_front_ref].next = head();
-        if (head() != List::BAD_REF) {
-            m_nodes[head()].prev = new_front_ref;
-        }
-        m_head_ref = new_front_ref;
-
-        if (tail() == List::BAD_REF) {
-            m_tail_ref = head();
-        }
-    }
-    return new_front_ref;
+    return insert_before (head(), val);
 }
 
 ref_t List::insert_back (val_t val) {
-    auto new_front_ref = allocate_val (val);
-
-    if (head() == List::BAD_REF || tail() == List::BAD_REF) {
-        m_head_ref = m_tail_ref = new_front_ref;
-        return tail();            
-    }
-
-    if (new_front_ref != List::BAD_REF) {
-        m_nodes[tail()].next = new_front_ref;
-        m_nodes[new_front_ref].prev = tail(); 
-        m_tail_ref = new_front_ref;
-    }
-    return new_front_ref;
+    return insert_after (tail(), val);
 }
 
 ref_t List::insert_after (ref_t ref, val_t val) {
@@ -137,10 +118,26 @@ ref_t List::insert_after (ref_t ref, val_t val) {
     ref_t new_ref = allocate_val (val);
     if (new_ref != List::BAD_REF) {
         m_nodes[new_ref].prev = ref;
-        m_nodes[new_ref].next = m_nodes[ref].next;
+        m_nodes[new_ref].next = m_nodes[ref].next;    
         
-        m_nodes[next(ref)].prev = new_ref;
-        m_nodes[ref].next       = new_ref;
+        m_nodes[next (ref)].prev = new_ref;
+        m_nodes[ref].next        = new_ref;
+    }
+    return new_ref;
+}
+
+ref_t List::insert_before (ref_t ref, val_t val) {
+    if (!is_valid_ref (ref)) {
+        return BAD_REF;
+    }
+
+    ref_t new_ref = allocate_val (val);
+    if (new_ref != List::BAD_REF) {
+        m_nodes[new_ref].next = ref;
+        m_nodes[new_ref].prev = m_nodes[ref].prev;
+
+        m_nodes[prev (ref)].next = new_ref;
+        m_nodes[ref].prev        = new_ref;
     }
     return new_ref;
 }
@@ -172,7 +169,19 @@ ref_t List::insert_after (ref_t ref, val_t val) {
 //
 bool List::is_valid_ref (ref_t ref) const {
     if (ref != List::BAD_REF) {
-        return m_nodes[ref].prev != ref && ref <= m_capacity;
+        return true;
     }
     return false;
+}
+
+void List::set_head (ref_t ref) {
+    m_nodes[ghost()].next = ref;
+}
+
+void List::set_tail (ref_t ref) {
+    m_nodes[ghost()].prev = ref;
+}
+
+ref_t List::ghost() const {
+    return m_ghost;
 }

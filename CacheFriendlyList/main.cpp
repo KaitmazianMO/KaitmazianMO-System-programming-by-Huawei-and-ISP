@@ -3,9 +3,11 @@
 #include "Log/log.h"
 #include <stdio.h>
 #include <assert.h>
+
 void list_dump (const List &list) {
-    for (size_t i = list.head(); i != List::BAD_REF; i = list.next(i)) {
-        printf ("%lg -> ", list.get(i));
+    ref_t curr = list.head();
+    for (size_t i = 0, size = list.size(); i < size; i++, curr = list.next (curr)) {
+        printf ("%lg -> ", list.get(curr));
     } putchar ('\n');
 }
 
@@ -67,8 +69,18 @@ int main() {
     ////}
     ////gv_graph_free (&graph);
 
-    List list (32);
+    List list (16);
 
+    List list_back (13);
+    list_back.insert_back (1);
+    
+    list_dump (list_back);
+    
+    list_back.insert_back (2);
+    list_back.insert_back (3);
+    list_dump (list_back);
+    
+    //list_dump (list);
     //for (int i = 0; i < 2; ++i) {
     //    if (list_insert_front (plist, val_t (i)) == LSIT_BAD_REF) {
     //        printf ("error while inserting\n");
@@ -76,14 +88,16 @@ int main() {
     //}
 
     list.insert_front (4);
-
     list.insert_front (3);
     list_dump (list);
 
     auto er = list.insert_front (1);
     list_dump (list);
+
     er = list.insert_after (er, 2);
     if (er == List::BAD_REF) printf ("BADREF2\n");
+    list_dump (list);
+
     list.insert_back (val_t(-1));
     list.insert_back (val_t(-2));
     list.insert_back (val_t(-3));

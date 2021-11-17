@@ -1,6 +1,7 @@
 #include "list.h"
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define NEXT( list , ref )  (list->nodes[ref].next)
 #define PREV( list , ref )  (list->nodes[ref].prev)
@@ -8,87 +9,80 @@
 #define TAIL( list )        (list->tail_ref)
 
 
-ref_t list_head (List *list) {
-    assert (list);
-
-    return HEAD (list);
+ref_t List::head() const {
+    return head_ref;
 }
 
-ref_t list_tail (List *list) {
-    assert (list);
-
-    return TAIL (list);
+ref_t List::tail() const {
+    return tail_ref;
 }
 
-ref_t list_next (List *list, ref_t ref) {
-    assert (list);
-
-    if (is_valid_ref (list, ref)) {
-        return NEXT (list, ref);
+ref_t List::next (ref_t ref) const {
+    if (is_valid_ref (ref)) {
+        return nodes[ref].next;
     }
     return List::BAD_REF;
 }
 
-ref_t list_prev (List *list, ref_t ref) {
-    assert (list);
-
-    if (is_valid_ref (list, ref)) {
-        return PREV (list, ref);
+ref_t List::prev (ref_t ref) const {
+    if (is_valid_ref (ref)) {
+        return nodes[ref].next;
     }
     return List::BAD_REF;
 }
 
 
-ref_t list_allocate_val (List *list, val_t val) {
-    auto ref = list->free_head_ref;
+ref_t List::allocate_val (val_t val) {
+    auto ref = free_head();
     if (ref != List::BAD_REF) {
-        list->free_head_ref = NEXT (list, list->free_head_ref);
-        list->nodes[ref].val = val;
-        list->nodes[ref].next = List::BAD_REF;
-        list->nodes[ref].prev = List::BAD_REF;
-        ++list->size;
+        shift_free_head();
+        nodes[ref].val = val;
+        nodes[ref].next = List::BAD_REF;
+        nodes[ref].prev = List::BAD_REF;
+        ++size;
     }
 
     return ref;
 }
 
-void list_erase_ref (List *list, ref_t ref) {
-    if (!is_valid_ref (list, ref)) { // already erased
-        return;
-    }
-
-    PREV (list, ref) = ref; // mark as free;
-    NEXT (list, ref) =  list->free_head_ref; // tie with free list
-    list->free_head_ref = ref; 
-    --list->size;
+ref_t List::free_head() const {
+    return free_head_ref;
 }
 
-int list_init (List *list, ref_t cap) {
-    assert (list);
-    list->size = 0;
-    list->cap = cap;
-    list->head_ref = List::BAD_REF;
-    list->tail_ref = List::BAD_REF;    
-    list->nodes = (List::Node *)calloc (cap, sizeof (list->nodes[0]));
-    if (!list->nodes) {
-        return 0;
-    }
-
-    list->free_head_ref = 0;
-    for (size_t i = 0; i < list->cap; ++i) {
-        list->nodes[i].prev = i;  // mark free vals
-        list->nodes[i].next = i + 1;  // tie free list
-    }
-    list->nodes[list->cap - 1].next = List::BAD_REF;
-
-    return 1;
+void List::shift_free_head() {
+    free_head_ref = nodes[free_head()].next;
 }
 
-int list_free (List *list) {
-    assert (list);
+ref_t List::erase (ref_t ref) {
+    if (!is_valid_ref (ref)) {
+        return List::BAD_REF;
+    }
 
-    free (list->nodes);
-    return 1;
+    nodes [ref].prev = ref;           // mark as free
+    nodes [ref].next = free_head();   // tie with free list
+    free_head_ref = ref; 
+    --size;
+    return ref;
+}
+
+List::List (ref_t cap) :
+    size (0), capacity (cap), head_ref (List::BAD_REF), tail_ref (List::BAD_REF),
+    nodes (new List::Node[cap]) {
+
+    free_head_ref = 0;
+    for (size_t i = 0; i < cap; ++i) {
+        nodes[i].prev = i;  // mark free vals
+        nodes[i].next = i + 1;  // tie free list
+    }
+    nodes[cap - 1].next = List::BAD_REF;
+}
+
+List::~List() {
+    if (nodes) {
+        delete [] nodes;
+    }
+    memset (this, 0, sizeof (*this));
+    nodes = nullptr;
 }
 
 ref_t list_insert_front (List *list, val_t val) {

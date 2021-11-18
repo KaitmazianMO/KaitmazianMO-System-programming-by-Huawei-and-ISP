@@ -1,5 +1,6 @@
 *.out
 *.pdf
 *.png
+*.pdf
 *.html
 *build

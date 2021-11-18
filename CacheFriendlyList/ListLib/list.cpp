@@ -77,8 +77,7 @@ ref_t List::erase (ref_t ref) {
 }
 #include <stdio.h>
 List::List (ref_t cap) {
-    m_capacity = (cap < 16) ? DEFAULT_CAPACITY : cap + 1; // for ghost elem
-    printf ("m_capacity = %zu\n", m_capacity);
+    m_capacity = ((cap < 16) ? DEFAULT_CAPACITY : cap) + 1; // for ghost elem
     m_nodes = new List::Node[m_capacity];
     m_size = 0;
     m_free_head_ref = 0;
@@ -99,7 +98,6 @@ List::List (const std::initializer_list<val_t> &init_list) :
     List (init_list.size()) { 
     for (const auto &i : init_list) {
         insert_back (i);
-        printf ("%lg ", i);
     }
 }
 

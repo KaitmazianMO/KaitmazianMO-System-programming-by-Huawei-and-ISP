@@ -11,38 +11,6 @@ void list_dump (const List &list) {
     } putchar ('\n');
 }
 
-//gv_Graph list_to_gv_graph (const List *list) {
-//    assert (list);
-//    
-//    gv_Graph graph = {};
-//    ref_t prev = 0;
-//    ref_t next = 0;
-//
-//    if (gv_graph_init (&graph)) {
-//        for (size_t i = 0, cap = list->cap; i < cap; ++i) {
-//            gv_graph_add_rank (&graph, i, GV_LAST_HANDLER);
-//        }
-//
-//        for (size_t i = 0, cap = list->cap; i < cap; ++i) {
-//            prev = list->nodes[i].prev;
-//            next = list->nodes[i].next;
-//            if (i != List::BAD_REF && prev != List::BAD_REF) {
-//                gv_graph_add_edje (&graph, i, prev, "");
-//            }
-//            if (i != List::BAD_REF && next != List::BAD_REF) {
-//                gv_graph_add_edje (&graph, i, next, "");
-//            }
-//        }
-//        for (size_t i = 0, cap = list->cap; i < cap; ++i) {
-//            gv_graph_add_vertex (&graph, i, gv_record, 
-//                "{ %lg | { prev:%zu | curr:%zu | next:%zu } }", 
-//                list->nodes[i].val, list->nodes[i].prev,
-//                i, list->nodes[i].next);
-//        }
-//    } 
-//    return graph;
-//}
-
 int main() {
 
     printf ("init list test:");

@@ -10,6 +10,7 @@ FetchContent_MakeAvailable(googletest)
 enable_testing()
 
 add_subdirectory(ListLib)
+add_subdirectory(Log)
 include_directories(ListLib)
 
 add_executable(
@@ -17,10 +18,11 @@ add_executable(
     test.cpp
 )
 
-
 target_link_libraries(
     list_test
     CacheFriendlyList
+    Log
+    Graphviz
     gtest_main
 )
 

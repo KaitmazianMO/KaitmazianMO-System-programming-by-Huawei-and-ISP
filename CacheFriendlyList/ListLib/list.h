@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 #include <initializer_list>
+#include "../Log/graphviz.h"
 
 typedef double val_t;
 typedef size_t ref_t;
@@ -35,6 +36,7 @@ public:
     ref_t insert_after (ref_t ref, val_t val);
     ref_t insert_before (ref_t ref, val_t val);
     ref_t erase (ref_t ref);
+    gv_Graph list_to_gv_graph();
     
     bool is_valid_ref (ref_t ref) const;
 

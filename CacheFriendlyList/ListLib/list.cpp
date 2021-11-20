@@ -149,31 +149,36 @@ ref_t List::insert_before (ref_t ref, val_t val) {
     return new_ref;
 }
 
-//ref_t list_erase (List *list, ref_t ref) {
-//    assert (list);
-//
-//    if (!is_valid_ref (list, ref)) { // alreay erased
-//        return ref;
-//    }
-//
-//    if (ref == HEAD (list)) {
-//        HEAD (list) = NEXT (list, HEAD (list));
-//        list_erase_ref (list, ref); 
-//        return ref;
-//    } else {
-//        auto prev_ref = PREV (list, ref);
-//        if (prev_ref != List::BAD_REF) {
-//            NEXT (list, prev_ref) = NEXT (list, ref);
-//            if (NEXT (list, ref) != List::BAD_REF) { // is there a next to tie
-//                PREV (list, NEXT (list, ref)) = prev_ref;
-//            }
-//            list_erase_ref (list, ref); 
-//            return ref;   
-//        }
-//    }
-//    return List::BAD_REF;
-//}
-//
+gv_Graph List::list_to_gv_graph() {
+    gv_Graph graph = {};
+    ref_t prev = 0;
+    ref_t next = 0;
+
+    if (gv_graph_init (&graph)) {
+        for (size_t i = 0; i < m_capacity; ++i) {
+            gv_graph_add_rank (&graph, i, GV_LAST_HANDLER);
+        }
+
+        for (size_t i = 0; i < m_capacity; ++i) {
+            prev = m_nodes[i].prev;
+            next = m_nodes[i].next;
+            if (i != List::BAD_REF && prev != List::BAD_REF) {
+                gv_graph_add_edje (&graph, i, prev, "");
+            }
+            if (i != List::BAD_REF && next != List::BAD_REF) {
+                gv_graph_add_edje (&graph, i, next, "");
+            }
+        }
+        for (size_t i = 0; i < m_capacity; ++i) {
+            gv_graph_add_vertex (&graph, i, gv_record, 
+                "{ %lg | { prev:%zu | curr:%zu | next:%zu } }", 
+                get(i), m_nodes[i].prev,
+                i, m_nodes[i].next);
+        }
+    } 
+    return graph;
+}
+
 bool List::is_valid_ref (ref_t ref) const {
     if (ref != List::BAD_REF) {
         return true;

@@ -6,6 +6,8 @@
 struct StringView {
     const char *beg_;
     size_t size_;
+	
+	StringView (const char *str, size_t size);
 };
 
 inline StringView make_string_view (const char *beg, size_t size) {

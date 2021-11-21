@@ -2,6 +2,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include <algorithm>
 
 ref_t List::head() const {
     return m_nodes[ghost()].next;
@@ -45,6 +46,19 @@ ref_t List::size() const {
 
 ref_t List::allocate_val (val_t val) {
     auto ref = free_head();
+
+    if (m_nodes[free_head()].next == List::BAD_REF) {  // no free elem
+        if (m_capacity - 1 != m_size) {  // have free elems, but it isn't in free_list
+            return List::BAD_REF;
+        } else {
+            Node *new_nodes = new Node[m_size*2 + 1];
+            std::move (m_nodes, m_nodes + m_size, new_nodes);
+            delete m_nodes;
+            m_nodes = new_nodes;
+            m_capacity = 2*m_size + 1;
+        }
+    }
+
     if (ref != List::BAD_REF) {
         shift_free_head();
         m_nodes[ref].val = val;
@@ -75,7 +89,7 @@ ref_t List::erase (ref_t ref) {
     --m_size;
     return ref;
 }
-#include <stdio.h>
+
 List::List (ref_t cap) {
     m_capacity = ((cap < 16) ? DEFAULT_CAPACITY : cap) + 1; // for ghost elem
     m_nodes = new List::Node[m_capacity];

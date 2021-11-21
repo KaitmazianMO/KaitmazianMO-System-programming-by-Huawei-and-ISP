@@ -53,6 +53,7 @@ private:
     ref_t free_head() const;
     void  shift_free_head();
     ref_t allocate_val (val_t val);
+    bool is_full (ref_t free_head);
 };
 
 #endif

@@ -1,0 +1,5 @@
+<pre>
+[<font color="blue">INFO   </font>] - Hello log <font color="grey">(test.cpp:main:41)</font>
+[<font color="#F6BE00">WARNING</font>] - Warning, testing warning log <font color="grey">(test.cpp:main:42)</font>
+[<font color="red">ERROR  </font>] - May be an error <font color="grey">(test.cpp:main:43)</font>
+[<font color="purple">FATAL  </font>] - That's all <font color="grey">(test.cpp:main:44)</font>

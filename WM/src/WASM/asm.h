@@ -1,7 +1,7 @@
 #ifndef ASM_H_INCLUDED
 #define ASM_H_INCLUDED
 
-#include "lex.h"
+#include "../Lexer/lex.h"
 #include "../Meta/meta.h"
 #include "../Instruction/instr.h"
 #include "../ObjectPool/obj_pool.h"

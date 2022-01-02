@@ -1,7 +1,7 @@
 #ifndef LOG_G_INCLUDED
 #define LOG_G_INCLUDED
 
-struct FILE;
+#include <stdio.h>
 
 enum LOG_MSG_TYPE {
     LOG_MSG_INFO, LOG_MSG_WARNING, LOG_MSG_ERROR, LOG_MSG_FATAL
@@ -36,16 +36,15 @@ struct LoggerLocation {
 
 void log_msg (LoggerLocation loc, LOG_MSG_TYPE type, const char *msg, ...);
 
-#define LOC  { __LINE__, __FILE__, __FUNCTION__ }
 #ifdef DO_LOGS
     #define LOG_SET_CONTEXT_LVL( lvl )              log_set_context_lvl (lvl)
     #define LOG_SET_CONTEXT_FILE_NAME( file_name )  log_set_context_file_name (file_name)
     #define LOG_SET_CONTEXT_FORMAT( format)         log_set_context_format (format)
 
-    #define LOG_INFO( ... )     log_msg (LOC, LOG_MSG_INFO, __VA_ARGS__)
-    #define LOG_WARNING( ... )  log_msg (LOC, LOG_MSG_WARNING, __VA_ARGS__)
-    #define LOG_ERROR( ... )    log_msg (LOC, LOG_MSG_ERROR, __VA_ARGS__)
-    #define LOG_FATAL( ... )    log_msg (LOC, LOG_MSG_FATAL, __VA_ARGS__)
+    #define LOG_INFO( ... )     log_msg ({ __LINE__, __FILE__, __FUNCTION__ }, LOG_MSG_INFO, __VA_ARGS__)
+    #define LOG_WARNING( ... )  log_msg ({ __LINE__, __FILE__, __FUNCTION__ }, LOG_MSG_WARNING, __VA_ARGS__)
+    #define LOG_ERROR( ... )    log_msg ({ __LINE__, __FILE__, __FUNCTION__ }, LOG_MSG_ERROR, __VA_ARGS__)
+    #define LOG_FATAL( ... )    log_msg ({ __LINE__, __FILE__, __FUNCTION__ }, LOG_MSG_FATAL, __VA_ARGS__)
 #else
     #define LOG_SET_CONTEXT_LVL( lvl )              ;
     #define LOG_SET_CONTEXT_FILE_NAME( file_name )  ;
@@ -56,6 +55,5 @@ void log_msg (LoggerLocation loc, LOG_MSG_TYPE type, const char *msg, ...);
     #define LOG_ERROR( ... )    ;
     #define LOG_FATAL( ... )    ;
 #endif 
-#undef LOC
 
 #endif // LOG_G_INCLUDED

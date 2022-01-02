@@ -7,6 +7,7 @@ struct StringView {
     const char *beg_;
     size_t size_;
 	
+    StringView () = default;
 	StringView (const char *str, size_t size);
 };
 

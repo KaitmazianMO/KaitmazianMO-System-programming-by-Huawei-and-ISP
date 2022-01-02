@@ -44,14 +44,12 @@ inline Token make_number (Lexer *lex) {
     errno = 0;
     decimal_n n = (decimal_n)strtod (nbeg, &nend);
     const size_t nsize = nend - nbeg;
-    if (nend && (*nend == '\0' || isspace (*nend) || *nend == ',')) {
+    if (nend && (*nend == '\0' || isspace (*nend))) {
         if (errno == ERANGE) {
             type = INCORRECT;
             error ("Too big number in %zu line", nline (lex));
-        } else if (memchr (nbeg, '.', nsize)) {
-            type = DEC_NUMBER;
         } else {
-            type = INT_NUMBER;
+            type = memchr (nbeg, '.', nsize) ? DEC_NUMBER : INT_NUMBER;
         }
     } else { /* extra chars at the end of the number */
         type = INCORRECT;

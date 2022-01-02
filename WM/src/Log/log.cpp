@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <string.h>
 #include <stdarg.h>
+#include <stdlib.h>
 
 static void do_raw_log (LoggerLocation loc, LOG_MSG_TYPE type, const char *msg, va_list *pargs);
 static void do_html_log (LoggerLocation loc, LOG_MSG_TYPE type, const char *msg, va_list *pargs);
@@ -16,7 +17,7 @@ static const char *raw_type_str (LOG_MSG_TYPE type);
 
 static LoggerContext CONTEXT = {
     .lvl       = LOG_MSG_INFO,
-    .file_name = ".log",
+    .file_name = NULL,
     .format    = LOG_FORMAT_RAW
 };
 
@@ -43,6 +44,11 @@ FILE *new_output_stream() {
     if (setvbuf (stream, NULL, _IONBF, 0)) {
         fprintf (stream, "Error when disabling buffering\n");
     }
+
+    if (CONTEXT.format == LOG_FORMAT_HTML) {
+        fprintf (stream, "<pre>\n");
+    }
+
     return stream;
 }
 
@@ -57,24 +63,32 @@ Logger *log_instance() {
 
 
 void log_msg (LoggerLocation loc, LOG_MSG_TYPE type, const char *msg, ...) {
-    va_list args = {};
-    va_start (args, msg);
-
-    const auto format = log_instance()->context.format;
-    switch (format) {
-        case LOG_FORMAT_RAW:  do_raw_log  (loc, type, msg, &args); break;
-        case LOG_FORMAT_HTML: do_html_log (loc, type, msg, &args); break;
-        default:              do_raw_log  (loc, type, msg, &args); break;
+    if (log_instance()->context.lvl <= type) {
+        va_list args = {};
+        va_start (args, msg);
+    
+        const auto format = log_instance()->context.format;
+        switch (format) {
+            case LOG_FORMAT_RAW:  do_raw_log  (loc, type, msg, &args); break;
+            case LOG_FORMAT_HTML: do_html_log (loc, type, msg, &args); break;
+            default:              do_raw_log  (loc, type, msg, &args); break;
+        }
+    
+        if (type == LOG_MSG_FATAL) {
+            exit (EXIT_FAILURE);
+        }
     }
 }
 
 void do_raw_log (LoggerLocation loc, LOG_MSG_TYPE type, const char *msg, va_list *pargs) {
     print_raw_type_prefix (type);
+    fprintf (log_instance()->output, " - ");
     print_raw_msg_body (loc, msg, pargs);
 }
 
 void do_html_log (LoggerLocation loc, LOG_MSG_TYPE type, const char *msg, va_list *pargs) {
     print_html_type_prefix (type);
+    fprintf (log_instance()->output, " - ");
     print_html_msg_body (loc, msg, pargs);
 }
 

@@ -15,9 +15,9 @@ enum TokenType {
 };
 
 struct Token {
-    TokenType type;
+    TokenType  type;
     StringView name;
-    size_t nline;
+    size_t     nline;
     union {
         decimal_n decimal;
         integer_n integer;    

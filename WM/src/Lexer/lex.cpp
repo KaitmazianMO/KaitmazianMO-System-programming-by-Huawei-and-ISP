@@ -57,7 +57,7 @@ inline Token make_number (Lexer *lex) {
     }
 
     advance (lex, nsize);
-    StringView nview = make_string_view (nbeg, nsize); 
+    StrView nview = make_str_view (nbeg, nsize); 
     lex->tok_ = make_token (type, nview, nline (lex));
     if (type == INT_NUMBER) {
         lex->tok_.num.integer = dec_to_int (n);
@@ -81,14 +81,14 @@ inline Token make_identifier (Lexer *lex) {
         advance (lex);
     }
 
-    StringView nview = make_string_view (nbeg, nsize); 
+    StrView nview = make_str_view (nbeg, nsize); 
     lex->tok_ = make_token (IDENTIFIER, nview, nline (lex));
     return tok (lex);
 }
 
 inline Token make_colon (Lexer *lex) {
     lex->tok_ = make_token (
-        COLON, make_string_view (lex->curr_sym_, 1),
+        COLON, make_str_view (lex->curr_sym_, 1),
         nline (lex));
    
     advance (lex);
@@ -101,7 +101,7 @@ inline void skip_comment (Lexer *lex) {
 
 inline Token make_final (Lexer *lex) {
     lex->tok_ = make_token (
-        FINAL, make_string_view (lex->curr_sym_, 1),
+        FINAL, make_str_view (lex->curr_sym_, 1),
         nline (lex));
    
     return tok (lex);
@@ -109,7 +109,7 @@ inline Token make_final (Lexer *lex) {
 
 inline Token make_incorrect (Lexer *lex) {
     lex->tok_ = make_token (
-        INCORRECT, make_string_view (lex->curr_sym_, 1),
+        INCORRECT, make_str_view (lex->curr_sym_, 1),
         nline (lex));
    
     return tok (lex);

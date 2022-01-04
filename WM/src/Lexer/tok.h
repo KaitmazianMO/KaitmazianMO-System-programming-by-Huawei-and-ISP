@@ -2,7 +2,7 @@
 #define TOK_H_INCLUDED
 
 #include <stddef.h>
-#include "../../Utilities/Strings/StringView.h"
+#include "str_view.h"
 #include "../Object/val.h"
 
 enum TokenType {
@@ -15,16 +15,13 @@ enum TokenType {
 };
 
 struct Token {
-    TokenType  type;
-    StringView name;
-    size_t     nline;
-    union {
-        decimal_n decimal;
-        integer_n integer;    
-    } num;
+    TokenType type;
+    StrView   name;
+    size_t    nline;
+    Value     num;
 };
 
-inline Token make_token (TokenType ttype, StringView tname, size_t tnline) {
+inline Token make_token (TokenType ttype, StrView tname, size_t tnline) {
     return Token { .type = ttype, .name = tname, .nline = tnline, .num = {} };
 }
 

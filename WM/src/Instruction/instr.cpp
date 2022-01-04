@@ -86,7 +86,8 @@ arg_t instr_to_ ## ARG (arg_t ARG) {    \
         }   \
         return G_INSTR_ARG_INVALID; \
     }
-    
+
+// converts an argument to a specific format
 DEFINE_INSTR_TO_ (R, R)
 DEFINE_INSTR_TO_ (A, A + G_INSTR_N_REGISTERS)
 DEFINE_INSTR_TO_ (B, B + G_INSTR_N_REGISTERS)

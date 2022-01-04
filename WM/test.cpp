@@ -1,16 +1,16 @@
 #ifndef VALUE_H_INCLUDED
 #define VALUE_H_INCLUDED
 
-#include <stdio.h>
-#include <stddef.h>
-#include <stdint.h> 
-#include <cmath>
-#include "WASM/lex.h"
-#include "Instruction/instr.h"
-#include "WASM/tok.h"
-#include "WASM/asm.h"
-#include "Error/err.h"
-#include <assert.h>
+//#include <stdio.h>
+//#include <stddef.h>
+//#include <stdint.h> 
+//#include <cmath>
+//#include "WASM/lex.h"
+//#include "Instruction/instr.h"
+//#include "WASM/tok.h"
+//#include "WASM/asm.h"
+//#include "Error/err.h"
+//#include <assert.h>
 
 //#define write_CMD( instr, opcode ) \
 //    (instr.cmd = opcode)

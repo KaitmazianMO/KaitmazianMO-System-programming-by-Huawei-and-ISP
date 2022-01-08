@@ -1,4 +1,5 @@
 #include "err.h"
+#include "log.h"
 #include <stdarg.h>
  
 static FILE *err_stream = stderr;
@@ -26,6 +27,7 @@ void fatal (const char *fmt, ...) {
     va_list list;
     va_start (list, fmt);
     vfprintf (get_err_stream(), fmt, list);
+    log_msg_varg ({}, LOG_MSG_FATAL, fmt, &list);
     va_end (list);
     fprintf (get_err_stream(), "\n");
 }
@@ -35,6 +37,7 @@ void error (const char *fmt, ...) {
     va_list list;
     va_start (list, fmt);
     vfprintf (get_err_stream(), fmt, list);
+    log_msg_varg ({}, LOG_MSG_ERROR, fmt, &list);
     va_end (list);
     fprintf (get_err_stream(), "\n");
 }
@@ -45,6 +48,7 @@ void warning (const char *fmt, ...) {
     va_list list;    
     va_start (list, fmt);
     vfprintf (get_err_stream(), fmt, list);
+    log_msg_varg ({}, LOG_MSG_WARNING, fmt, &list);
     va_end (list);
     fprintf (get_err_stream(), "\n");
 }

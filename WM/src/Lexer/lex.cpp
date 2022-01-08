@@ -4,7 +4,8 @@
 #include <errno.h>
 #include <string.h>
 #include "lex.h"
-#include "../Error/err.h"
+#include "err.h"
+#include "log.h"
 
 int lex_init (Lexer *lex, const char *src) {
     assert (lex);
@@ -13,6 +14,8 @@ int lex_init (Lexer *lex, const char *src) {
     lex->curr_sym_ = src;
     lex->tok_ = {};
     lex->nline_ = 1;
+
+    LOG_INFO ("Lexer initialized successfully")
     return 1;
 }
 
@@ -61,9 +64,16 @@ inline Token make_number (Lexer *lex) {
     lex->tok_ = make_token (type, nview, nline (lex));
     if (type == INT_NUMBER) {
         lex->tok_.num.integer = dec_to_int (n);
+        LOG_INFO ("Created integer number with value %Ld from %zu line",
+            (long long)lex->tok_.num.integer, lex->tok_.nline);
     } else if (type == DEC_NUMBER) {
+        LOG_INFO ("Created decimal number with value %Lf from %zu line",
+            (long double)lex->tok_.num.decimal, lex->tok_.nline);
         lex->tok_.num.decimal = n;
+    } else {
+        LOG_INFO ("Created incorrect number token from %zu line", lex->tok_.nline);
     }
+
     return tok (lex);
 }
 
@@ -83,6 +93,8 @@ inline Token make_identifier (Lexer *lex) {
 
     StrView nview = make_str_view (nbeg, nsize); 
     lex->tok_ = make_token (IDENTIFIER, nview, nline (lex));
+    LOG_INFO ("Created identifier token '%.*s' from %zu line",
+        lex->tok_.name.size, lex->tok_.name.beg, lex->tok_.nline);
     return tok (lex);
 }
 
@@ -92,6 +104,7 @@ inline Token make_colon (Lexer *lex) {
         nline (lex));
    
     advance (lex);
+    LOG_INFO ("Created colon token from %zu line", lex->tok_.nline);    
     return tok (lex);
 }
 
@@ -103,7 +116,7 @@ inline Token make_final (Lexer *lex) {
     lex->tok_ = make_token (
         FINAL, make_str_view (lex->curr_sym_, 1),
         nline (lex));
-   
+    LOG_INFO ("Created final token form %zu line", lex->tok_.nline);
     return tok (lex);
 }
 
@@ -111,7 +124,7 @@ inline Token make_incorrect (Lexer *lex) {
     lex->tok_ = make_token (
         INCORRECT, make_str_view (lex->curr_sym_, 1),
         nline (lex));
-   
+    LOG_INFO ("Created incorrect token form %zu line", lex->tok_.nline);
     return tok (lex);
 }
 

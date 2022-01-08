@@ -14,6 +14,7 @@ enum TokenType {
     INCORRECT
 };
 
+
 struct Token {
     TokenType type;
     StrView   name;
@@ -25,5 +26,7 @@ inline Token make_token (TokenType ttype, StrView tname, size_t tnline) {
     return Token { .type = ttype, .name = tname, .nline = tnline, .num = {} };
 }
 
+bool tok_is_const (Token tok);
+bool tok_is_identifier (Token tok);
 
 #endif // TOK_H_INCLUDED

@@ -61,22 +61,27 @@ Logger *log_instance() {
     return &instance;
 }
 
-
 void log_msg (LoggerLocation loc, LOG_MSG_TYPE type, const char *msg, ...) {
     if (log_instance()->context.lvl <= type) {
         va_list args = {};
         va_start (args, msg);
     
-        const auto format = log_instance()->context.format;
-        switch (format) {
-            case LOG_FORMAT_RAW:  do_raw_log  (loc, type, msg, &args); break;
-            case LOG_FORMAT_HTML: do_html_log (loc, type, msg, &args); break;
-            default:              do_raw_log  (loc, type, msg, &args); break;
-        }
+        log_msg_varg (loc, type, msg, &args);
+
+        va_end (args);
+    }
+}
+
+void log_msg_varg (LoggerLocation loc, LOG_MSG_TYPE type, const char *msg, va_list *pargs) {
+    const auto format = log_instance()->context.format;
+    switch (format) {
+        case LOG_FORMAT_RAW:  do_raw_log  (loc, type, msg, pargs); break;
+        case LOG_FORMAT_HTML: do_html_log (loc, type, msg, pargs); break;
+        default:              do_raw_log  (loc, type, msg, pargs); break;
+    }
     
-        if (type == LOG_MSG_FATAL) {
-            exit (EXIT_FAILURE);
-        }
+    if (type == LOG_MSG_FATAL) {
+        exit (EXIT_FAILURE);
     }
 }
 

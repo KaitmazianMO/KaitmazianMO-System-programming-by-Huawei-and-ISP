@@ -9,10 +9,9 @@
 
 /*                      
  * Isntruction := { cmd , args } 
- *           move R1 1    add R1 R2 5         jmp 4
+ *           move R1 1      add R1 R2 5            jmp 4
  * args := { reg, ref/reg | reg, ref/reg, ref/reg | addr }   
  *   
- * if reg/ref 
  */
 
 /* typedefs for args, ref_t can be a reg if it less than G_INSTR_N_REGS */ 
@@ -85,15 +84,15 @@ struct ReservedCommand {
     const char *name;
 };
 
-ReservedCommand find_reserved_command (const StringView sv);
+ReservedCommand find_reserved_command (const StrView sv);
 
 static constexpr arg_t G_INSTR_ARG_INVALID = (arg_t)(-1);
 
 // A, B, C, D may be regs, so use instr_to_R in reg case
-arg_t instr_to_R (arg_t arg); // R as reg
-arg_t instr_to_A (arg_t arg); // A as ref
-arg_t instr_to_B (arg_t arg); // B as ref
-arg_t instr_to_C (arg_t arg); // C as ref
-arg_t instr_to_D (arg_t arg); // D as ref
+arg_t arg_to_R (arg_t arg); // R as reg
+arg_t arg_to_A (arg_t arg); // A as ref
+arg_t arg_to_B (arg_t arg); // B as ref
+arg_t arg_to_C (arg_t arg); // C as ref
+arg_t arg_to_D (arg_t arg); // D as ref
 
 #endif

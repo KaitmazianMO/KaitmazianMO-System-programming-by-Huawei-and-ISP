@@ -45,7 +45,7 @@ LEX_TEST (Tokenizing) {
         Lexer lex = {};
         ASSERT_NE (lex_init (&lex, code.c_str()), 0) << "Lexer intialization failed";
     
-        for (int i = 0; i < ARR_SIZE (tokens); ++i) {
+        for (size_t i = 0; i < ARR_SIZE (tokens); ++i) {
             Token tok = lex_get_tok (&lex);
             ASSERT_EQ (strncmp (tok.name.beg, tokens[i].c_str(), tok.name.size), 0) <<
                 "Exprected " << tokens[i] << " but has " <<

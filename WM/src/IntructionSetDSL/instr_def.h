@@ -35,7 +35,17 @@ INSTR_CNTX_REPR(div, 3 ,
     )
 )
 
-INSTR_CNTX_REPR(N, 4, 
+INSTR_CNTX_REPR(print, 4 , 
+    CODE(
+    )
+)
+
+INSTR_CNTX_REPR(move, 5 , 
+    CODE(
+    )
+)
+
+INSTR_CNTX_REPR(N, 6, 
     CODE(
     )
 )

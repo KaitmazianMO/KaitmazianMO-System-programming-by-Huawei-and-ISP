@@ -11,6 +11,7 @@ struct Meta {
     size_t code_sec_size_;
     size_t pool_sec_;
     size_t pool_sec_size_;
+    size_t stack_size_;
 };
 
 #endif // META_H_INCLUDED

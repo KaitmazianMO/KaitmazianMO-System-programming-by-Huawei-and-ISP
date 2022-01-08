@@ -2,6 +2,7 @@
 #define LOG_G_INCLUDED
 
 #include <stdio.h>
+#include <stdarg.h>
 
 enum LOG_MSG_TYPE {
     LOG_MSG_INFO, LOG_MSG_WARNING, LOG_MSG_ERROR, LOG_MSG_FATAL
@@ -35,6 +36,7 @@ struct LoggerLocation {
 };
 
 void log_msg (LoggerLocation loc, LOG_MSG_TYPE type, const char *msg, ...);
+void log_msg_varg (LoggerLocation loc, LOG_MSG_TYPE type, const char *msg, va_list *args);
 
 #ifdef DO_LOGS
     #define LOG_SET_CONTEXT_LVL( lvl )              log_set_context_lvl (lvl)

@@ -1,15 +1,20 @@
 #include "asm.h"
-#include "../Constants/consts.h"
-#include "../Instruction/instr.h"
-#include "../Error/err.h"
+#include "consts.h"
+#include "instr.h"
+#include "err.h"
+#include "log.h"
 #include <assert.h>
 #include <errno.h>
 
-inline TokenType  type (Token tok) { return tok.type; };
-inline StringView name (Token tok) { return tok.name; };
 
-inline const char *beg  (StringView sv) { return sv.beg_; };
-inline size_t      size (StringView sv) { return sv.size_; };
+static inline TokenType  type (Token tok) { return tok.type; };
+static inline StrView    name (Token tok) { return tok.name; };
+
+static inline const char *beg  (StrView sv) { return sv.beg; };
+static inline size_t      size (StrView sv) { return sv.size; };
+
+static arg_t handle_register (Token tok_reg);
+static arg_t handle_constant (Token tok_const, ObjectPool *obj_pool, Code *code, arg_t (*arg_formatter)(arg_t));
 
 typedef int (*cmd_handler_t) (Assembler *assm);
 
@@ -28,7 +33,7 @@ inline int call_handler (Assembler *assm, Opcode opcode) {
         #include "../IntructionSetDSL/instr_def.h"
     }; 
     
-    printf ("opcode to call = %d\n", opcode);
+    LOG_INFO ("Calling handler for %s with opcode = %d, %d opcodes at all", instr_to_str (opcode), opcode, op_N);
     if (opcode < op_N) {
         return handlers[opcode](assm);
     }
@@ -83,12 +88,11 @@ int asm_translate (Assembler *assm) {
 
     for (Token tok = lex_get_tok (pLEX); type (tok) != FINAL; tok = lex_get_tok (pLEX)) {
         if (type (tok) == IDENTIFIER) {
-            printf ("get identigyer \'%.*s\'\n", (int)tok.name.size_, tok.name.beg_);
+            LOG_INFO ("Start translating identifier \'%.*s\' from %zu line",
+                (int)tok.name.size, tok.name.beg, tok.nline);
             auto found = find_reserved_command (name (tok));
-            printf ("found.name = \'%s\'\n", found.name);
-            printf ("found.id   = \'%d\'\n", found.id);
-            printf ("calling handler of id\n");
             if (found.id != op_N) {
+                LOG_INFO ("Found reserved word (%s:%d)", found.name, found.id)
                 if (call_handler (assm, found.id) == 0) {
                     lex_skip_line (pLEX);
                 } 
@@ -104,18 +108,42 @@ int asm_translate (Assembler *assm) {
     return 1;
 }
 
-arg_t to_register (StringView sv) {
-    char *nend = NULL;
-    errno = 0;
-    arg_t num = (arg_t)strtol (beg (sv) + 1, &nend, 10);
-    arg_t regn = instr_to_R (num);
-    if (regn == G_INSTR_ARG_INVALID || errno == ERANGE || num < 0) {
-        error ("Wrong register number " REGREF_F ", "
-               "there is only %zu awailable registers", num, G_INSTR_N_REGISTERS);
-    }
+int asm_create_executable_file (Assembler *assm, const char *file_name) {
+    assert (assm);
+    assert (file_name);
 
-    if (sv.beg_ + sv.size_ != nend) { 
-        error ("Extra cahracters at et the end of register \'%.*s\'", (int)sv.size_, sv.beg_);
+    FILE *exfile = fopen (file_name, "wb");
+    if (exfile) {
+        Meta exmeta = {};
+
+        exmeta.pool_sec_size_ = obj_pool_dump (exfile);
+        exmeta.code_sec_size_ = code_dump (exfile);
+        // .fsize = write (meta) + write (obj_pool) + write (code) 
+
+        // meta
+        // obj_poop
+        // code
+
+    }
+}
+
+arg_t get_reg_num (StrView sv) {
+    arg_t regn = G_INSTR_ARG_INVALID;
+    if (sv.beg[0] != 'R') {
+        char *nend = NULL;
+        errno = 0;
+        arg_t num = (arg_t)strtol (beg (sv) + 1, &nend, 10);
+        regn = arg_to_R (num);
+        if (regn == G_INSTR_ARG_INVALID || errno == ERANGE || num < 0) {
+            error ("Wrong register number " REGREF_F ", "
+                   "there is only %zu awailable registers", num, G_INSTR_N_REGISTERS);
+        }
+
+        if (sv.beg + sv.size != nend) { 
+            error ("Extra cahracters at et the end of register \'%.*s\'", (int)sv.size, sv.beg);
+        }
+    } else {
+        error ("Expected register");
     }
 
     return regn;
@@ -126,9 +154,11 @@ Object make_object (Token tok) {
     if (tok.type == INT_NUMBER) {
         obj.tag = INT;
         obj.val.integer = tok.num.integer;
+        LOG_INFO ("Maked an integer number object %.*s", tok.name.size, tok.name.beg);
     } else if (tok.type == DEC_NUMBER) {
         obj.tag = DEC;
         obj.val.decimal = tok.num.decimal;
+        LOG_INFO ("Maked an decimal number object %.*s", tok.name.size, tok.name.beg);
     } else {
         ERROR ("Unknown token type %d", tok.type);
     }
@@ -136,72 +166,122 @@ Object make_object (Token tok) {
     return obj;
 }
 
-#define EXPECT3( tag_expect1, tag_expect2, tag_expect3, opcode )    \
-    if (type (tok) != tag_expect1 && type (tok) != tag_expect2 && type (tok) != tag_expect3) { \
-        error ("Expected %s, %s or %s"  \
-            " after the command %s at line %zu", \
-            #tag_expect1, #tag_expect2, #tag_expect3,   \
-            instr_to_str (opcode), LEXLINE);   \
-        return 0;  \
-    }   \
-
-#define HANDLE_AS_REGISTER( reg )   \
-    if (beg (name (tok))[0] == 'R') {   \
-        A = to_register (name (tok));   \
-    } else {    \
-        error ("Expected register. Registers names start with R");  \
-        return 0;   \
-    }   \
-
-#define HADNLE_AS_REF( AB, ref ) \
-    if (ref == OBJ_POOL_BAD_IDX) {  \
-        return 0;   \
-    }   \
-    AB = instr_to_ref (ref);    \
-    if (AB > G_INSTR_REF_T_MAX) {  \
-        ERROR ("Unsopportable number of references (max:%d) will be fixed later", G_INSTR_REF_T_MAX - G_INSTR_REG_T_MAX); \
-        return 0;   \
-    }   \
-
-#define HANDLE_AB( A )  \
-    if (type (tok) == IDENTIFIER) { \
-        HANDLE_AS_REGISTER (R); \
-    } else { /* number */   \
-        auto obj = make_object (tok);   \
-        if (obj.tag != VOID) {  \
-            ref_t ref = obj_pool_insert (pOBJ_POOL, obj);   \
-            HADNLE_AS_REF (A, ref); \
-        } else {    \
-            return 0;   \
-        }   \
-    }   \
-
 int handle_arithmetic (Assembler *assm, Opcode ar_code) {
     arg_t R{};
     arg_t A{};
     arg_t B{};
 
     auto tokR = lex_get_tok (pLEX);
-    if (type (tokR) != IDENTIFIER) {
-        error ("Expected register identtifyer after the command %s at line %zu", 
-            instr_to_str (ar_code), LEXLINE); 
-        return 0;  
-    }   
-    R = to_register (tokR.name);
-    if (R == G_INSTR_ARG_INVALID) {
-        return 0;
+    if (tok_is_identifier (tokR)) {
+        R = arg_to_R (handle_register (tokR));
     }
+    else {        
+        error ("Expected register identtifyer after the command %s at line %zu", 
+            instr_to_str (ar_code), tokR.nline); 
+    }   
 
     auto tokA = lex_get_tok (pLEX);
+    if (tok_is_identifier (tokA)) {
+        A = arg_to_R (handle_register (tokA));
+    } else if (tok_is_const (tokA)) {
+        A = arg_to_A (handle_constant (tokA, pOBJ_POOL));
+    } else {
+        error ("Expected register or constant identtifyer after the command %s at line %zu", 
+            instr_to_str (ar_code), tokR.nline); 
+    }
+     
     auto tokB = lex_get_tok (pLEX);
-    EXPECT3 (IDENTIFIER, DEC_NUMBER, INT_NUMBER, ar_code);
-    HANDLE_AB (A);
+    if (tok_is_identifier (tokB)) {
+        B = arg_to_R (handle_register (tokB));
+    } else if (tok_is_const (tokB)) {
+        B = arg_to_B (handle_constant (tokB, pOBJ_POOL));
+    } else {
+        error ("Expected register or constant identtifyer after the command %s at line %zu", 
+            instr_to_str (ar_code), tokR.nline); 
+    }
 
-    EXPECT3 (IDENTIFIER, DEC_NUMBER, INT_NUMBER, ar_code);    
-    HANDLE_AB (B);
-
-    return code_write_RAB (pCODE, ar_code, R, A, B);
+    if (R != G_INSTR_ARG_INVALID &&
+        A != G_INSTR_ARG_INVALID && 
+        B != G_INSTR_ARG_INVALID) {
+        return code_write_RAB (pCODE, ar_code, R, A, B);
+    }
     
+    return 0;
+}
+
+arg_t handle_register (Token tok_reg) {
+    assert (tok_is_identifier (tok_reg));
+    arg_t R = G_INSTR_ARG_INVALID;
+    if (tok_reg.name.beg[0] == 'R') {
+        char *nend = NULL;
+        errno = 0;
+        arg_t num = (arg_t)strtol (tok_reg.name.beg + 1, &nend, 10);
+        R = arg_to_R (num);
+        if (R == G_INSTR_N_REGISTERS || errno == ERANGE) {
+            error ("Wrong register number " REGREF_F ", "
+                   "there is only %zu awailable registers", num, G_INSTR_N_REGISTERS);
+        }
+
+        if (!isspace (*nend) || *nend != '\0') { 
+            error ("Extra cahracters at et the end of register \'%.*s\'", (int)sv.size, sv.beg);
+        }
+    } else {
+        error ("Expected register");
+    }
+
+    return R;    
+}
+
+static arg_t load_const_in_reg (Code *code, pool_idx cnst, arg_t reg);
+
+arg_t handle_constant (Token tok_const, ObjectPool *obj_pool, Code *code, arg_t (*arg_formatter)(arg_t)) {
+    assert (tok_is_const (tok_const));
+    assert (obj_pool);
+    assert (arg_formatter);
+
+    arg_t ref = G_INSTR_ARG_INVALID;
+    auto const_obj = make_object (tok_const);
+    if (const_obj.tag != VOID) {
+        auto const_idx = obj_pool_insert (obj_pool, const_obj);
+        if (const_idx != OBJ_POOL_BAD_IDX) {
+            ref = arg_formatter (const_idx);
+            if (ref == G_INSTR_ARG_INVALID) { /* try to load const in reg before call operation */
+                ref = load_const_in_reg (code, const_idx, G_INSTR_N_REGISTERS - 1);
+            }
+        }
+    }
+
+    return ref;
+}
+
+arg_t load_const_in_reg (Code *code, pool_idx cnst, arg_t reg) {
+    assert (code);
+    
+    auto R = arg_to_R (reg);
+    if (R == G_INSTR_ARG_INVALID) {
+        fatal ("Bad register for constant loading");
+        return G_INSTR_ARG_INVALID;
+    }
+    auto C = arg_to_C (cnst);
+    if (C == G_INSTR_ARG_INVALID) {
+        error ("Too many constants, there is more than %zu constants in the pool", cnst);
+        return G_INSTR_ARG_INVALID;
+    }
+    
+    return code_write_RC (code, op_move, R, C) ? R : G_INSTR_ARG_INVALID;
+}
+
+arg_t handle_constant_A (Assembler *assm, arg_t A) {
+    if (G_INSTR_ARG_A_MAX < A && A != G_INSTR_ARG_INVALID) {
+        if (code_wtite_RC (pCODE, op_move, G_INSTR_N_REGISTERS - 1, A)) {
+            A = G_INSTR_N_REGISTERS - 1;
+        } else {
+            error ("To many constatns")
+            A = G_INSTR_ARG_INVALID;
+        }
+    }
+
+    return A;
 }
 
 int add_handler (Assembler *assm) {
@@ -218,6 +298,14 @@ int mul_handler (Assembler *assm) {
 
 int div_handler (Assembler *assm) {
     return handle_arithmetic (assm, op_div);
+}
+
+int move_handler (Assembler *assm) {
+    
+}
+
+int print_handler (Assembler *assm) {
+
 }
 
 int N_handler (Assembler *assm) {

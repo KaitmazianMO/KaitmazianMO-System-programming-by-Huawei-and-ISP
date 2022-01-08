@@ -74,6 +74,11 @@ Object obj_pool_get (ObjectPool *this_, pool_idx idx) {
     return Object {.tag = VOID};
 }
 
+size_t obj_pool_size (ObjectPool *this_) {
+    assert (this_);
+    return NOBJS;
+}
+
 int obj_pool_grow (ObjectPool *this_) {
     assert (this_);
 

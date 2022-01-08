@@ -28,6 +28,12 @@ int code_free (Code *code) {
     return 1;
 }
 
+size_t code_size (Code *code) {
+    assert (code);
+
+    return SIZE;
+}
+
 int code_grow (Code *code) {
     assert (code);
 
@@ -71,7 +77,7 @@ int code_write_RAB (Code *code, Opcode opcode, arg_t R, arg_t A, arg_t B) {
     return code_push (code ,instr);
 }
 
-int code_wtite_RC (Code *code, Opcode opcode, arg_t R, arg_t C) {
+int code_write_RC (Code *code, Opcode opcode, arg_t R, arg_t C) {
     assert (code);
 
     if (!verify_ref (C)) {
@@ -79,8 +85,9 @@ int code_wtite_RC (Code *code, Opcode opcode, arg_t R, arg_t C) {
     }
 
     Instruction instr = {};
-    write_instr_CMD (instr, opcode);
-    instr.cmd = C;
+    instr.RC.opcode = opcode;
+    instr.RC.R      = R;
+    instr.RC.C      = C;
     return code_push (code ,instr);
 }
 

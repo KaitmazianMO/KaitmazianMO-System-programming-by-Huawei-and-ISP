@@ -1,11 +1,12 @@
 #ifndef ASM_H_INCLUDED
 #define ASM_H_INCLUDED
 
-#include "../Lexer/lex.h"
-#include "../Meta/meta.h"
-#include "../Instruction/instr.h"
-#include "../ObjectPool/obj_pool.h"
+#include "lex.h"
+#include "meta.h"
+#include "instr.h"
+#include "obj_pool.h"
 #include "code.h"
+#include "meta.h"
 
 struct Assembler {
     Meta meta_;
@@ -16,7 +17,7 @@ struct Assembler {
 
 int asm_init (Assembler *assm, const char *source);
 int asm_translate (Assembler *assm);
-int asm_create_execute_file (Assembler *assm, const char file_name); 
+int asm_create_executable_file (Assembler *assm, const char *file_name); 
 Assembler asm_destroyable();
 int asm_free (Assembler *assm);
 

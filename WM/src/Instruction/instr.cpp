@@ -1,5 +1,6 @@
 #include "instr.h"
-#include "../Error/err.h"
+#include "err.h"
+#include "str_view.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -42,7 +43,7 @@ int cmp_sv_cmd (const void *sv_search_v, const void *key_v) {
     return cmp;
 }
 
-ReservedCommand find_reserved_command (const StringView sv) {
+ReservedCommand find_reserved_command (const StrView sv) {
     #define INSTR_CNTX_REPR( iname, opcode, ... )\
         { .id = (Opcode)opcode, .name = #iname }, 
 
@@ -69,28 +70,18 @@ ReservedCommand find_reserved_command (const StringView sv) {
     return {.id = op_N};
 }
 
-#define DEFINE_INSTR_TO_( ARG, FORMATED, ... )   \
-arg_t instr_to_ ## ARG (arg_t ARG) {    \
-    arg_t formated = FORMATED; \
-    if (formated >= G_INSTR_ARG_ ## ARG ## _MAX) { \
-        error (__VA_ARGS__);  \
-        return G_INSTR_ARG_R_MAX;   \
-    }   \
-    return formated; \
-}
-
-#define DEFINE_INSTR_TO_( ARG, FORMAT)  \
-    arg_t instr_to_ ## ARG (arg_t ARG) {   \
-        if (FORMAT < G_INSTR_ARG_ ## ARG ##_MAX) {    \
-            return FORMAT;   \
+#define DEFINE_ARG_TO_( ARG, ARG_FORMATED)  \
+    arg_t arg_to_ ## ARG (arg_t ARG) {   \
+        if ((ARG_FORMATED) < G_INSTR_ARG_ ## ARG ##_MAX) {    \
+            return ARG_FORMATED;   \
         }   \
         return G_INSTR_ARG_INVALID; \
     }
 
 // converts an argument to a specific format
-DEFINE_INSTR_TO_ (R, R)
-DEFINE_INSTR_TO_ (A, A + G_INSTR_N_REGISTERS)
-DEFINE_INSTR_TO_ (B, B + G_INSTR_N_REGISTERS)
-DEFINE_INSTR_TO_ (C, C + G_INSTR_N_REGISTERS)
-DEFINE_INSTR_TO_ (C, C + G_INSTR_N_REGISTERS)
-DEFINE_INSTR_TO_ (D, D + G_INSTR_N_REGISTERS)
+DEFINE_ARG_TO_ (R, R)
+DEFINE_ARG_TO_ (A, A + G_INSTR_N_REGISTERS)
+DEFINE_ARG_TO_ (B, B + G_INSTR_N_REGISTERS)
+DEFINE_ARG_TO_ (C, C + G_INSTR_N_REGISTERS)
+DEFINE_ARG_TO_ (C, C + G_INSTR_N_REGISTERS)
+DEFINE_ARG_TO_ (D, D + G_INSTR_N_REGISTERS)

@@ -79,10 +79,8 @@ int code_write_RAB (Code *code, Opcode opcode, arg_t R, arg_t A, arg_t B) {
 
 int code_write_RC (Code *code, Opcode opcode, arg_t R, arg_t C) {
     assert (code);
-
-    if (!verify_ref (C)) {
-        return 0;
-    }
+    assert (R != G_INSTR_ARG_INVALID);
+    assert (C != G_INSTR_ARG_INVALID);
 
     Instruction instr = {};
     instr.RC.opcode = opcode;
@@ -92,5 +90,11 @@ int code_write_RC (Code *code, Opcode opcode, arg_t R, arg_t C) {
 }
 
 int code_write_D (Code *code, Opcode opcode, arg_t D) {
+    assert (code);
+    assert (D != G_INSTR_ARG_INVALID);
 
+    Instruction instr = {};
+    instr.D.opcode = opcode;
+    instr.D.D      = D;
+    return code_push (code ,instr);
 }

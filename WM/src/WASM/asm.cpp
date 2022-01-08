@@ -173,18 +173,17 @@ int handle_arithmetic (Assembler *assm, Opcode ar_code) {
 
     auto tokR = lex_get_tok (pLEX);
     if (tok_is_identifier (tokR)) {
-        R = arg_to_R (handle_register (tokR));
-    }
-    else {        
+        R = handle_register (tokR);
+    } else {        
         error ("Expected register identtifyer after the command %s at line %zu", 
             instr_to_str (ar_code), tokR.nline); 
     }   
 
     auto tokA = lex_get_tok (pLEX);
     if (tok_is_identifier (tokA)) {
-        A = arg_to_R (handle_register (tokA));
+        A = handle_register (tokA);
     } else if (tok_is_const (tokA)) {
-        A = arg_to_A (handle_constant (tokA, pOBJ_POOL));
+        A = handle_constant (tokA, pOBJ_POOL, pCODE, arg_to_A);
     } else {
         error ("Expected register or constant identtifyer after the command %s at line %zu", 
             instr_to_str (ar_code), tokR.nline); 
@@ -192,9 +191,9 @@ int handle_arithmetic (Assembler *assm, Opcode ar_code) {
      
     auto tokB = lex_get_tok (pLEX);
     if (tok_is_identifier (tokB)) {
-        B = arg_to_R (handle_register (tokB));
+        B = handle_register (tokB);
     } else if (tok_is_const (tokB)) {
-        B = arg_to_B (handle_constant (tokB, pOBJ_POOL));
+        B = handle_constant (tokB, pOBJ_POOL, arg_to_B);
     } else {
         error ("Expected register or constant identtifyer after the command %s at line %zu", 
             instr_to_str (ar_code), tokR.nline); 

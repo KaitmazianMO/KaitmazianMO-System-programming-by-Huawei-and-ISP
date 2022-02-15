@@ -47,15 +47,12 @@ ref_t List::size() const {
 ref_t List::allocate_val (val_t val) {
     auto ref = free_head();
 
-    if (m_buffer[free_head()].next == List::BAD_REF) {  // no free elem
-        if (m_buffer.capacity - 1 != m_size) {  // have free elems, but it isn't in free_list
-            return List::BAD_REF;
-        } else {
-            Buffer new_buffer (m_size*2 + 1);
-            std::move (m_buffer.data, m_buffer.data + m_size, new_buffer.data);
-            m_buffer.swap (new_buffer);
-        }
+    if (m_buffer.capacity - 1 == m_size) {  // no free elem
+        Buffer new_buffer (m_size*2 + 1);
+        std::move (m_buffer.data, m_buffer.data + m_size, new_buffer.data);
+        m_buffer.swap (new_buffer);
     }
+    
 
     if (ref != List::BAD_REF) {
         shift_free_head();

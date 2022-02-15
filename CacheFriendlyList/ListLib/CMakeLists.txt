@@ -6,8 +6,6 @@ add_library (
     list.cpp
 )
 
-add_subdirectory (../Log)
-
 target_link_libraries (
     CacheFriendlyList
     Log

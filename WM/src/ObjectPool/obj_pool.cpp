@@ -46,6 +46,8 @@ pool_idx obj_pool_look_up (const ObjectPool *this_, Object obj) {
 }
 
 pool_idx obj_pool_insert (ObjectPool *this_, Object obj) {
+    assert (this_);
+
     auto found = obj_pool_look_up (this_, obj);
     if (found != OBJ_POOL_BAD_IDX) { /* obj is in the pool */
         return found;
@@ -65,6 +67,7 @@ pool_idx obj_pool_insert (ObjectPool *this_, Object obj) {
 }
 
 Object obj_pool_get (const ObjectPool *this_, pool_idx idx) {
+    assert (this_);
     assert (idx != OBJ_POOL_BAD_IDX);
 
     if (idx <= NOBJS) {
@@ -75,6 +78,7 @@ Object obj_pool_get (const ObjectPool *this_, pool_idx idx) {
 }
 
 size_t obj_pool_dump (const ObjectPool *this_, FILE *file) {
+    assert (this_);
     assert (file);
 
     size_t wrote =  fwrite (OBJS, sizeof (OBJS[0]), NOBJS, file);

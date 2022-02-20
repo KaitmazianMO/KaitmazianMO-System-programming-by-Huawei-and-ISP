@@ -32,7 +32,7 @@ int obj_pool_free (ObjectPool *this_) {
     return 1;
 }
 
-pool_idx obj_pool_look_up (ObjectPool *this_, Object obj) {
+pool_idx obj_pool_look_up (const ObjectPool *this_, Object obj) {
     assert (this_);
 
     for (size_t i = 0; i < NOBJS; ++i) {
@@ -47,11 +47,11 @@ pool_idx obj_pool_look_up (ObjectPool *this_, Object obj) {
 
 pool_idx obj_pool_insert (ObjectPool *this_, Object obj) {
     auto found = obj_pool_look_up (this_, obj);
-    if (found != OBJ_POOL_BAD_IDX) { /* obj is in pool */
+    if (found != OBJ_POOL_BAD_IDX) { /* obj is in the pool */
         return found;
     }
     
-    if (NOBJS == CAPACITY) { /* new obj inserting */
+    if (NOBJS == CAPACITY) { 
         if (obj_pool_grow (this_)) {
             OBJS[NOBJS++] = obj;
             return NOBJS-1;
@@ -64,7 +64,7 @@ pool_idx obj_pool_insert (ObjectPool *this_, Object obj) {
     return NOBJS-1;    
 }
 
-Object obj_pool_get (ObjectPool *this_, pool_idx idx) {
+Object obj_pool_get (const ObjectPool *this_, pool_idx idx) {
     assert (idx != OBJ_POOL_BAD_IDX);
 
     if (idx <= NOBJS) {
@@ -74,7 +74,14 @@ Object obj_pool_get (ObjectPool *this_, pool_idx idx) {
     return Object {.tag = VOID};
 }
 
-size_t obj_pool_size (ObjectPool *this_) {
+size_t obj_pool_dump (const ObjectPool *this_, FILE *file) {
+    assert (file);
+
+    size_t wrote =  fwrite (OBJS, sizeof (OBJS[0]), NOBJS, file);
+    return wrote; 
+}
+
+size_t obj_pool_size (const ObjectPool *this_) {
     assert (this_);
     return NOBJS;
 }

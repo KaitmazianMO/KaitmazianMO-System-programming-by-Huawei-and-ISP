@@ -10,7 +10,13 @@ bool val_is_equal (Value lhs, Value rhs, Tag tag) {
         } break;
         case DEC: {
             return lhs.decimal == rhs.decimal;
-        }
+        } break;
+        case STR: {
+            assert (false && "STR");
+        } break;
+        case VOID: {
+            error ("Comparing void");
+        } break;        
     }
     return false;
 }
@@ -19,13 +25,14 @@ bool obj_is_equal (Object lhs, Object rhs) {
     if (obj_tag (lhs) == obj_tag (rhs)) {
         return val_is_equal (obj_val (lhs), obj_val (rhs), obj_tag (lhs));
     }
+    error ("Comparing different type ibjects");
     return false;
 }
 
 #define CMP_AS( type )\
     if (lhs.val.type <  rhs.val.type) return LESS;  \
     if (lhs.val.type >  rhs.val.type) return MORE;  \
-    if (lhs.val.type == rhs.val.type) return EQUAL; \
+    return EQUAL; \
 
 CompareResult obj_compare (Object lhs, Object rhs) {
     if (obj_tag (lhs) == obj_tag (rhs)) {

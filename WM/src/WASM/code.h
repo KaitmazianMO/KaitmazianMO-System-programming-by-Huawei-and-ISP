@@ -12,8 +12,8 @@ struct Code {
 
 int code_init (Code *code, size_t size);
 int code_free (Code *code);
-size_t code_size (Code *code);
-size_t code_dump (FILE *file);
+size_t code_size (const Code *code);
+size_t code_dump (const Code *code, FILE *file);
 
 inline Code code_destroyable() { return Code{ .instr_ = NULL, .size_ = 0 }; }
 

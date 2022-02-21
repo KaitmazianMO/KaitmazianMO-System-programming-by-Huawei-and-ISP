@@ -28,7 +28,15 @@ int code_free (Code *code) {
     return 1;
 }
 
-size_t code_size (Code *code) {
+size_t code_dump (const Code *code, FILE *file) {
+    assert (code);
+    assert (file);
+
+    size_t wrote =  fwrite (INSTR, sizeof (INSTR[0]), SIZE, file);
+    return wrote; 
+}
+
+size_t code_size (const Code *code) {
     assert (code);
 
     return SIZE;

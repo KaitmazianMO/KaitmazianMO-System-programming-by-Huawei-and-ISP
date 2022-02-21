@@ -14,6 +14,9 @@ int obj_pool_init (ObjectPool *this_, size_t size) {
     assert (this_);
     assert (size);
 
+    if (size == 0) {
+        size = 1;
+    }
     OBJS = (Object *)calloc (size, sizeof (OBJS[0]));
     if (OBJS) {
         NOBJS = 0;
@@ -74,7 +77,7 @@ Object obj_pool_get (const ObjectPool *this_, pool_idx idx) {
         return OBJS[idx];
     }
     error ("appeal out of pool range");
-    return Object {.tag = VOID};
+    return Object {.tag = VOID, {}};
 }
 
 size_t obj_pool_dump (const ObjectPool *this_, FILE *file) {

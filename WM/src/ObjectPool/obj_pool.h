@@ -2,7 +2,8 @@
 #define OBJ_POOL_H_INCLUDED
 
 #include <stddef.h>
-#include "../Object/obj.h"
+#include <stdio.h>
+#include "obj.h"
 
 /*
  * @todo keep objects  sorted by tab using a cache-frieldy list for fast inserting in arbitary place of pool  

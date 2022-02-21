@@ -17,7 +17,6 @@ struct Object {
 
 enum CompareResult {
     EQUAL,
-    NOT_EQUAL,
     LESS,
     MORE,
     UNCOMPARABLE,
